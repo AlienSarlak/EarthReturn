@@ -22,7 +22,7 @@ class Rocket:
         The shape of the rocket, attached to the pymunk body.
     """
 
-    def __init__(self, state_vector: State_Vector, mass: float = 0.0,
+    def __init__(self, state_vector: State_Vector, mass: float = 10.0,
                  position=(0, 0), orientation: float = 0.0) -> None:
         """
         Initialize the Rocket with the given parameters.
@@ -43,14 +43,12 @@ class Rocket:
         self.orientation = orientation  # in radians
         self.state_vector = state_vector
 
-        self.body = pymunk.Body(mass=self.mass,
-                                moment=pymunk.moment_for_box(mass, (10, 30)))
+        self.body = pymunk.Body()
         self.body.position = position
         self.body.angle = orientation
 
-        self.shape = pymunk.Poly.create_box(self.body, size=(10, 30))
-        self.shape.friction = 0.3
-        self.shape.elasticity = 0.0
+        self.shape = pymunk.Poly.create_box(self.body)
+        self.shape.mass = mass
 
     def update_state_vector(self) -> None:
         """
