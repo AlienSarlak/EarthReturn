@@ -34,4 +34,5 @@ class Physics_Simulator:
         self._space.step(dt)
 
     def __repr__(self) -> str:
-        return f"Physics: {self._space.debug_draw(self._print_options)}"
+        # return f"{self._space.debug_draw(self._print_options)}"
+        return f"p: {self._rocket.body.position}, v: {self._rocket.body.velocity}"
