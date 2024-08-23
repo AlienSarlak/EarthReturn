@@ -25,7 +25,7 @@ def game_loop(screen, clk, draw_opt, physics):
             if event.type == QUIT:
                 running = False
 
-        screen.fill((255, 255, 255))
+        screen.fill((55, 55, 55))
         physics.update_rocket_state(dt=1/fps, draw_options=draw_opt)
         print(physics)
         pygame.display.flip()  # Update the display
