@@ -73,6 +73,7 @@ class Rocket:
         self.shape = pymunk.Poly.create_box(self.body, size=size)
         self.shape.mass = mass
         self.shape.elasticity = 0
+        self.shape.friction = 1.0
 
     def update_state_vector(self) -> None:
         """
