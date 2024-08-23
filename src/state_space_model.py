@@ -1,5 +1,6 @@
 import numpy as np
 from state_vector import State_Vector
+from utils import np2sv
 
 
 class StateSpaceModel:
@@ -38,4 +39,4 @@ class StateSpaceModel:
             [current_state.theta_dot],
         ])
         X_new = self.A @ X_old + self.B @ u + self.f
-        return State_Vector(X_new[0, 0], X_new[1, 0], X_new[2, 0], X_new[3, 0])
+        return np2sv(X_new)
