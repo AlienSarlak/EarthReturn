@@ -30,11 +30,11 @@ class Physics_Simulator:
         self._space.add(self._rocket.body, self.rocket.shape)
 
         # Assign collision types
-        ground_shape.collision_type = 1
-        self.rocket.shape.collision_type = 2
+        # ground_shape.collision_type = 1
+        # self.rocket.shape.collision_type = 2
 
-        handler = self._space.add_collision_handler(2, 1)
-        handler.begin = self.on_rocket_landing
+        # handler = self._space.add_collision_handler(2, 1)
+        # handler.begin = self.on_rocket_landing
 
         self._print_options = pymunk.SpaceDebugDrawOptions()
 
@@ -42,19 +42,19 @@ class Physics_Simulator:
     def rocket(self):
         return self._rocket
 
-    def on_rocket_landing(self, arbiter, space, data):
-        rocket, ground = arbiter.shapes
-        rocket.body.position = (
-            rocket.body.position.x,
-            (
-                (ground.a.y + ground.b.y) * 0.5 +
-                (self._rocket.size.height * 0.5 + ground.radius)
-                if self._gravity[1] < 0 else
-                (ground.a.y + ground.b.y) * 0.5 -
-                (self._rocket.size.height * 0.5 + ground.radius)
-            ))
-        rocket.body.velocity = (0, 0)
-        return True
+    # def on_rocket_landing(self, arbiter, space, data):
+    #     rocket, ground = arbiter.shapes
+    #     rocket.body.position = (
+    #         rocket.body.position.x,
+    #         (
+    #             (ground.a.y + ground.b.y) * 0.5 +
+    #             (self._rocket.size.height * 0.5 + ground.radius)
+    #             if self._gravity[1] < 0 else
+    #             (ground.a.y + ground.b.y) * 0.5 -
+    #             (self._rocket.size.height * 0.5 + ground.radius)
+    #         ))
+    #     rocket.body.velocity = (0, 0)
+    #     return True
 
     def update_rocket_state(self, dt, draw_options):
         self._space.step(dt)
