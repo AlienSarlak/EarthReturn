@@ -86,7 +86,7 @@ class Rocket:
         self.state_vector.y = self.body.position.y
         self.state_vector.theta = self.body.angle
         self.state_vector.y_dot = self.body.velocity.y
-        self.state_vector.theta_dot = self.body.angular_velocity
+        self.state_vector.alpha_dot = self.body.angular_velocity
 
     def __repr__(self) -> str:
         """
