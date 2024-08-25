@@ -7,7 +7,7 @@ def sv2np(x: State_Vector):
         [x.y],
         [x.theta],
         [x.y_dot],
-        [x.theta_dot],
+        [x.alpha_dot],
     ])
 
 
