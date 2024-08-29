@@ -7,7 +7,7 @@ from visualize import Visualize
 def main():
     print("Start ...")
 
-    fps = 60
+    fps = 120
     visualizer = Visualize(fps=fps)
     rocket_y = 200
     state = State_Vector(y=rocket_y, y_dot=50)
