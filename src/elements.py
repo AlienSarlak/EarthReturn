@@ -1,3 +1,3 @@
 class Elements:
-    def draw(self, space, draw_option):
+    def draw(self, space):
         pass
