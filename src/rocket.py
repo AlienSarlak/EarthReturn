@@ -25,7 +25,7 @@ class Size:
 
 class Rocket:
     def __init__(self, state_vector: State_Vector, mass: float = 10.0,
-                 position=(0, 0), orientation: float = 0.0, size=(120, 210)) -> None:
+                 position=(0, 0), orientation: float = 0.0, size=(190, 210)) -> None:
         self.mass = mass
         self.position = position
         self.orientation = orientation  # in radians
@@ -43,18 +43,26 @@ class Rocket:
         self.shape.elasticity = 0
         self.shape.friction = 1.0
 
+        # set the initial state to pymunk
+        self.body.velocity = pymunk.Vec2d(0, state_vector.y_dot)
+        self.body.angular_velocity = state_vector.alpha_dot
+
         image_path = os.path.join(os.path.dirname(
             __file__), 'img', 'rocket-model.png')
         # Load the rocket image
+
         self.image = pygame.image.load(image_path)
         self.image = pygame.transform.scale(
             self.image, (self.size.width, self.size.height))
 
     def update_state_vector(self) -> None:
         self.state_vector.y = self.body.position.y
-        self.state_vector.theta = self.body.angle
+        self.state_vector.alpha = self.body.angle
         self.state_vector.y_dot = self.body.velocity.y
         self.state_vector.alpha_dot = self.body.angular_velocity
+
+    def apply_force(self, force, point=(0, 0)):
+        self.body.apply_force_at_local_point(force, point)
 
     def __repr__(self) -> str:
         return (f"Rocket(mass={self.mass}, position={self.position}, "

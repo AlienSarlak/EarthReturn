@@ -7,8 +7,8 @@ class MPCController:
                  ltc=0.5,
                  mass=20,
                  moi=2.5,
-                 T_max=2000,
-                 dt=1/50,
+                 T_max=150,
+                 dt=1/120,
                  N=10):
         self.gravity = gravity
         self.ltc = ltc
@@ -42,11 +42,21 @@ class MPCController:
     def setup_mpc(self, real_state, target_vector):
         X = real_state
         U = self.opti.variable(self.N, 2)
+        l_u = 10
+        height_penalty = 100
         cost = 0
         for i in range(self.N):
             u_i = U[i, :]
             cost += ca.norm_2(X - target_vector) ** 2
             X = self.evolution(current_state=X, u=u_i.T, dt=self.dt)
+            if i > 0:  # Ensure we don't try to penalize change for the first step
+                delta_u = U[i, :] - U[i-1, :]
+                cost += l_u * ca.norm_2(delta_u) ** 2
+
+            min_height = 100  # Define a minimum acceptable altitude threshold
+            # Only penalize if below threshold
+            height_error = ca.fmax(0, min_height - X[0])
+            cost += height_penalty * height_error ** 2
 
         # Putting more weight on the last step
         cost += ca.norm_2(X - target_vector) ** 2
@@ -65,9 +75,16 @@ class MPCController:
         return U
 
     def solve(self, U):
-        p_opts = {"expand": True}  # faster and more efficient
-        # FIXME: I will play with it
-        s_opts = {"max_iter": 20}
+        p_opts = {
+            'print_time': False,         # Disable printing of timing information
+            'ipopt': {
+                'print_level': 0,        # Set print level to 0 (no output)
+                'sb': 'yes',             # Suppress IPOPT banner
+                'file_print_level': 0    # No output in log files
+            },
+            "expand": True
+        }
+        s_opts = {"max_iter": 20, "print_level": 0, "sb": "yes"}
         self.opti.solver('ipopt', p_opts, s_opts)
 
         solution = self.opti.solve()

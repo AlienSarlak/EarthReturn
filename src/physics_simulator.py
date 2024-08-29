@@ -20,11 +20,14 @@ class Physics_Simulator(Elements):
 
         ground_body = self._space.static_body
 
+        self.groud_level = 1000
+        self.groud_tickness = 10
         ground_shape = pymunk.Segment(
             ground_body,
-            (0, 0) if gravity_y < 0 else (0, 1000),
-            (1000, 0) if gravity_y < 0 else (1000, 1000),
-            10
+            (0, 0) if gravity_y < 0 else (0, self.groud_level),
+            (self.groud_level, 0) if gravity_y < 0 else (
+                self.groud_level, self.groud_level),
+            self.groud_tickness
         )
 
         ground_shape.friction = 0.02
@@ -45,7 +48,10 @@ class Physics_Simulator(Elements):
         # return f"{self._space.debug_draw(self._print_options)}"
         return f"p: {self._rocket.body.position}, v: {self._rocket.body.velocity}"
 
-    def draw(self, screen, draw_option):
+    def apply_forces_to_rocket(self, force):
+        self._rocket.apply_force(force=force)
+
+    def draw(self, screen):
         # self._space.debug_draw(draw_option)
         rotated_image = pygame.transform.rotate(
             self._rocket.image, -degrees(self._rocket.body.angle))
