@@ -14,7 +14,7 @@ class Visualize:
         self.fps = fps
 
         background_path = os.path.join(os.path.dirname(
-            __file__), 'img', 'bg.jpg')
+            __file__), 'img', 'bg_dark.jpg')
         self.background = pygame.image.load(background_path)
         self.background = pygame.transform.scale(
             self.background, self.screen.get_size())
@@ -31,7 +31,7 @@ class Visualize:
         self.screen.blit(self.background, (0, 0))
 
         for obj in self.objects:
-            obj.draw(self.screen, self.draw_options)
+            obj.draw(self.screen)
 
         pygame.display.flip()
         self.clock.tick(self.fps)
