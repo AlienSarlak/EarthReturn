@@ -11,21 +11,26 @@ class Visualize:
         self.clock = pygame.time.Clock()
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
         self.fps = fps
+        self.objects = []
 
-    def loop(self, physics):
-        # Run the simulation with Pygame
-        running = True
+    def add_object(self, object):
+        self.objects.append(object)
 
-        while running:
-            for event in pygame.event.get():
-                if event.type == QUIT:
-                    running = False
+    def remove_object(self, obj):
+        if obj in self.objects:
+            self.objects.remove(obj)
 
-            self.screen.fill((55, 55, 55))
-            physics.update_rocket_state(
-                dt=1/self.fps, draw_options=self.draw_options)
-            # print(physics)
-            pygame.display.flip()  # Update the display
-            self.clock.tick(self.fps)
+    def update(self):
+        self.screen.fill((55, 55, 55))
 
-        pygame.quit()
+        for obj in self.objects:
+            obj.draw(self.draw_options)
+
+        pygame.display.flip()
+        self.clock.tick(self.fps)
+
+    def handle_events(self):
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                exit()

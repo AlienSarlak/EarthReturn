@@ -6,13 +6,22 @@ from visualize import Visualize
 
 def main():
     print("Start ...")
-    v = Visualize()
 
+    fps = 60
+    visualizer = Visualize(fps=fps)
     rocket_y = 200
     state = State_Vector(y=rocket_y, y_dot=50)
     rocket = Rocket(state_vector=state, mass=20, position=(300, rocket_y))
     ps = Physics_Simulator(rocket=rocket)
-    v.loop(physics=ps)
+
+    visualizer.add_object(ps)
+
+    running = True
+
+    while running:
+        visualizer.handle_events()  # Handle events such as window close
+        ps.update_rocket_state(dt=1/fps)
+        visualizer.update()
 
     print("End ...")
 
