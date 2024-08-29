@@ -1,5 +1,6 @@
 import pymunk.pygame_util
 import pygame
+import os
 from pygame.locals import QUIT
 
 
@@ -11,6 +12,12 @@ class Visualize:
         self.clock = pygame.time.Clock()
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
         self.fps = fps
+
+        background_path = os.path.join(os.path.dirname(
+            __file__), 'img', 'bg.jpg')
+        self.background = pygame.image.load(background_path)
+        self.background = pygame.transform.scale(
+            self.background, self.screen.get_size())
         self.objects = []
 
     def add_object(self, object):
@@ -21,10 +28,10 @@ class Visualize:
             self.objects.remove(obj)
 
     def update(self):
-        self.screen.fill((55, 55, 55))
+        self.screen.blit(self.background, (0, 0))
 
         for obj in self.objects:
-            obj.draw(self.draw_options)
+            obj.draw(self.screen, self.draw_options)
 
         pygame.display.flip()
         self.clock.tick(self.fps)

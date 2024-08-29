@@ -1,5 +1,6 @@
-from elements import Elements
+import pygame
 import pymunk
+import os
 from state_vector import State_Vector
 
 
@@ -24,7 +25,7 @@ class Size:
 
 class Rocket:
     def __init__(self, state_vector: State_Vector, mass: float = 10.0,
-                 position=(0, 0), orientation: float = 0.0, size=(50, 50)) -> None:
+                 position=(0, 0), orientation: float = 0.0, size=(120, 210)) -> None:
         self.mass = mass
         self.position = position
         self.orientation = orientation  # in radians
@@ -41,6 +42,13 @@ class Rocket:
         self.shape.mass = mass
         self.shape.elasticity = 0
         self.shape.friction = 1.0
+
+        image_path = os.path.join(os.path.dirname(
+            __file__), 'img', 'rocket-model.png')
+        # Load the rocket image
+        self.image = pygame.image.load(image_path)
+        self.image = pygame.transform.scale(
+            self.image, (self.size.width, self.size.height))
 
     def update_state_vector(self) -> None:
         self.state_vector.y = self.body.position.y
