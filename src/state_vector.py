@@ -8,9 +8,8 @@ class State_Vector:
         self.y_dot = y_dot
         self.alpha_dot = alpha_dot
 
-
-def __repr__(self) -> str:
-    return f"State_Vector(y={self.y}, " \
-        f"alpha={self.alpha}, " \
-        f"y_dot={self.y_dot}, " \
-        f"alpha_dot={self.alpha_dot})"
+    def __repr__(self) -> str:
+        return f"State_Vector(y={"{:.2f}".format(self.y)}, " \
+            f"alpha={"{:.2f}".format(self.alpha)}, " \
+            f"y_dot={"{:.2f}".format(self.y_dot)}, " \
+            f"alpha_dot={"{:.2f}".format(self.alpha_dot)})"
