@@ -62,6 +62,8 @@ class Rocket:
         self.state_vector.alpha_dot = self.body.angular_velocity
 
     def apply_force(self, force, point=(0, 0)):
+        # the unit must be 100 times since pymunk understand pixel/second (pps)
+        force = tuple([x * 100 for x in force])
         self.body.apply_force_at_local_point(force, point)
 
     def __repr__(self) -> str:

@@ -7,15 +7,13 @@ class MPCController:
                  ltc=0.5,
                  mass=20,
                  moi=2.5,
-                 T_max=150,
-                 dt=1/120,
+                 T_max=100,
                  N=10):
         self.gravity = gravity
         self.ltc = ltc
         self.mass = mass
         self.moi = moi
         self.T_max = T_max
-        self.dt = dt
         self.N = N
 
         self.opti = ca.Opti()
@@ -39,24 +37,22 @@ class MPCController:
         X_dot = current_state + X_new * dt
         return X_dot
 
-    def setup_mpc(self, real_state, target_vector):
+    def setup_mpc(self, real_state, target_vector, dt):
         X = real_state
         U = self.opti.variable(self.N, 2)
         l_u = 10
-        height_penalty = 100
+        # height_penalty = 100
+        print(f"====================")
+        print(f"X => {X}")
+        print(f"********************")
         cost = 0
         for i in range(self.N):
             u_i = U[i, :]
             cost += ca.norm_2(X - target_vector) ** 2
-            X = self.evolution(current_state=X, u=u_i.T, dt=self.dt)
-            if i > 0:  # Ensure we don't try to penalize change for the first step
-                delta_u = U[i, :] - U[i-1, :]
-                cost += l_u * ca.norm_2(delta_u) ** 2
-
-            min_height = 100  # Define a minimum acceptable altitude threshold
-            # Only penalize if below threshold
-            height_error = ca.fmax(0, min_height - X[0])
-            cost += height_penalty * height_error ** 2
+            X = self.evolution(current_state=X, u=u_i.T, dt=dt)
+            print(f"====================")
+            print(f"X => {X}")
+            print(f"~~~~~~~~~~~~~~~~~~~~")
 
         # Putting more weight on the last step
         cost += ca.norm_2(X - target_vector) ** 2
