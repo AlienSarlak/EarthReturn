@@ -9,6 +9,7 @@ class Visualize:
         # Initialize Pygame
         pygame.init()
         self.screen = pygame.display.set_mode((800, 1000))
+        pygame.display.set_caption("Landing on Earth [MPC]")
         self.clock = pygame.time.Clock()
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
         self.fps = fps

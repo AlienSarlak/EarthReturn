@@ -25,7 +25,7 @@ class Size:
 
 class Rocket:
     def __init__(self, state_vector: State_Vector, mass: float = 10.0,
-                 position=(0, 0), orientation: float = 0.0, size=(190, 210)) -> None:
+                 position=(0, 0), orientation: float = 0.0, size=(190/2, 210/2)) -> None:
         self.mass = mass
         self.position = position
         self.orientation = orientation  # in radians
@@ -45,7 +45,7 @@ class Rocket:
 
         # set the initial state to pymunk
         self.body.velocity = pymunk.Vec2d(0, state_vector.y_dot)
-        self.body.angular_velocity = state_vector.alpha_dot
+        # self.body.angular_velocity = state_vector.alpha_dot
 
         image_path = os.path.join(os.path.dirname(
             __file__), 'img', 'rocket-model.png')
@@ -55,14 +55,17 @@ class Rocket:
         self.image = pygame.transform.scale(
             self.image, (self.size.width, self.size.height))
 
+        self.current_thrust = 0
+
     def update_state_vector(self) -> None:
         self.state_vector.y = self.body.position.y
-        self.state_vector.alpha = self.body.angle
+        # self.state_vector.alpha = self.body.angle
         self.state_vector.y_dot = self.body.velocity.y
-        self.state_vector.alpha_dot = self.body.angular_velocity
+        # self.state_vector.alpha_dot = self.body.angular_velocity
 
     def apply_force(self, force, point=(0, 0)):
         # the unit must be 100 times since pymunk understand pixel/second (pps)
+        self.current_thrust = force[1]
         force = tuple([x * 100 for x in force])
         self.body.apply_force_at_local_point(force, point)
 

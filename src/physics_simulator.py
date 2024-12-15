@@ -3,14 +3,14 @@ import pygame
 from rocket import Rocket
 from elements import Elements
 from math import degrees
-
-# FIXME: This is a draft physics simulation need more
+from exhaust_flame import ExhaustFlame
 
 
 class Physics_Simulator(Elements):
     def __init__(self, rocket: Rocket,
                  gravity_x: float = 0.0,
-                 gravity_y: float = +981) -> None:
+                 gravity_y: float = +981,
+                 ) -> None:
         self._gravity = gravity_x, gravity_y
 
         self._rocket = rocket
@@ -36,6 +36,11 @@ class Physics_Simulator(Elements):
 
         self._print_options = pymunk.SpaceDebugDrawOptions()
 
+        self.exhaust_flame = ExhaustFlame(ground=self.groud_level - self.groud_tickness,
+                                          position=(0, 0),
+                                          thrust_force=1,
+                                          number_of_particles=250)
+
     @property
     def rocket(self):
         return self._rocket
@@ -52,9 +57,25 @@ class Physics_Simulator(Elements):
         self._rocket.apply_force(force=force)
 
     def draw(self, screen):
-        # self._space.debug_draw(draw_option)
+        # Draw the rocket
         rotated_image = pygame.transform.rotate(
             self._rocket.image, -degrees(self._rocket.body.angle))
         rect = rotated_image.get_rect(
             center=(self._rocket.body.position.x, self._rocket.body.position.y))
         screen.blit(rotated_image, rect.topleft)
+
+        self.exhaust_flame.position = (
+            self._rocket.body.position.x,
+            self._rocket.body.position.y+self._rocket.size.height/2)
+
+        self.exhaust_flame.thrust_force = abs(self._rocket.current_thrust)/10
+
+        self.exhaust_flame.number_of_particles = int(
+            self.exhaust_flame.thrust_force)*5
+
+        # Emit new particles
+        self.exhaust_flame.emit()
+
+        # Update and draw particles
+        self.exhaust_flame.update()
+        self.exhaust_flame.draw(screen)
