@@ -6,5 +6,5 @@ class State_Vector:
         self.y_dot = y_dot
 
     def __repr__(self) -> str:
-        return f"State_Vector(y={"{:.2f}".format(885-self.y)}, " \
+        return f"State_Vector(y={"{:.2f}".format(self.y)}, " \
             f"y_dot={"{:.2f}".format(self.y_dot)})"

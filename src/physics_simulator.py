@@ -8,6 +8,7 @@ from exhaust_flame import ExhaustFlame
 
 class Physics_Simulator(Elements):
     def __init__(self, rocket: Rocket,
+                 ground_height,
                  gravity_x: float = 0.0,
                  gravity_y: float = +981,
                  ) -> None:
@@ -20,7 +21,7 @@ class Physics_Simulator(Elements):
 
         ground_body = self._space.static_body
 
-        self.groud_level = 1000
+        self.groud_level = ground_height
         self.groud_tickness = 10
         ground_shape = pymunk.Segment(
             ground_body,

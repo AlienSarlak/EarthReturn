@@ -6,7 +6,7 @@ from numpy import matrix
 class MPCController:
     def __init__(self, gravity=9.81,
                  mass=20,
-                 T_max=-410,
+                 T_max=-600,
                  N=10):
         self.gravity = gravity
         self.mass = mass
@@ -44,7 +44,7 @@ class MPCController:
         self.opti.set_value(criteria_falling_velocity, abs(result_vector[1]))
 
         # Weight to penalize the differences in target and current state
-        q = (2000/criteria_dist_to_ground+1e-6)*(criteria_falling_velocity)
+        q = (4000/criteria_dist_to_ground+1e-6)*(criteria_falling_velocity)
 
         Q = ca.MX(2, 2)
         Q[0, 0] = 1
@@ -55,14 +55,14 @@ class MPCController:
         # Weight to penalize abrupt controls
         R = ca.DM([[5],])
 
-        q = (5000/criteria_dist_to_ground+1e-6)*(criteria_falling_velocity*10)
+        # q = (20000/criteria_dist_to_ground+1e-6)*(criteria_falling_velocity*10)
 
-        # Weight to penalize the last state
-        P = ca.MX(2, 2)
-        P[0, 0] = 1
-        P[0, 1] = 0
-        P[1, 0] = 0
-        P[1, 1] = q
+        # # Weight to penalize the last state
+        # P = ca.MX(2, 2)
+        # P[0, 0] = 1
+        # P[0, 1] = 0
+        # P[1, 0] = 0
+        # P[1, 1] = q
 
         cost = 0
         for i in range(self.N-1):
@@ -74,7 +74,7 @@ class MPCController:
             cost = cost + current_cost
 
         # Putting more weight on the last step
-        cost = cost + (X - target_vector).T @ P @ (X - target_vector)
+        cost = cost + (X - target_vector).T @ Q @ (X - target_vector)
 
         self.opti.minimize(cost)
 

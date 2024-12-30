@@ -5,10 +5,13 @@ from pygame.locals import QUIT
 
 
 class Visualize:
-    def __init__(self, fps: int = 60) -> None:
+    def __init__(self, width, height, fps: int = 60) -> None:
         # Initialize Pygame
         pygame.init()
-        self.screen = pygame.display.set_mode((800, 1000))
+        self.display_width = width
+        self.display_height = height
+        self.screen = pygame.display.set_mode(
+            (self.display_width, self.display_height))
         pygame.display.set_caption("Landing on Earth [MPC]")
         self.clock = pygame.time.Clock()
         self.draw_options = pymunk.pygame_util.DrawOptions(self.screen)
