@@ -12,7 +12,7 @@ class MPCController:
                  mass=20,
                  rocket_height=10,
                  T_max=-600,
-                 N=10):
+                 N=5):
         self.gravity = gravity
         self.mass = mass
         self.T_max = T_max
@@ -99,25 +99,26 @@ class MPCController:
         q = (5000/criteria_dist_to_ground+1e-6)*(criteria_falling_velocity)
 
         Q = ca.MX(6, 6)
+        Q[0, 0] = q
         Q[1, 1] = q
         Q[2, 2] = q
         Q[4, 4] = q
         Q[5, 5] = q
 
         # Penalize the distance to target [6x6]
-        # Q = ca.MX([[1, 0, 0, 0, 0, 0],
+        # Q = ca.MX([[q, 0, 0, 0, 0, 0],
         #            [0, q, 0, 0, 0, 0],
         #            [0, 0, q, 0, 0, 0],
         #            [0, 0, 0, 1, 0, 0],
         #            [0, 0, 0, 0, q, 0],
-        #            [0, 0, 0, 0, 0, 1],
+        #            [0, 0, 0, 0, 0, q],
         #            ])
 
         # ca.substitute(Q, q, 1000)
 
         # Penalize the controls [2x2]
         R = ca.DM([[5, 0],
-                   [0, 5]])
+                   [0, 5e4]])
 
         # N horizon, each [F_T, theta]
         U = self.opti.variable(self.N, 2)
@@ -135,13 +136,14 @@ class MPCController:
 
         self.opti.minimize(cost)
 
+        ###########################################
         # Set the constraints on the control inputs
-        # T = U[:, 0]
+        ###########################################
 
         # 0 <= T <= T_max
         self.opti.subject_to(self.opti.bounded(self.T_max, U[:, 0], 0))
         # -0.3 Radians < theta < 0.3 Radians
-        self.opti.subject_to(self.opti.bounded(-0.3, U[:, 1], 0.3))
+        self.opti.subject_to(self.opti.bounded(-0.2, U[:, 1], 0.2))
         return U
 
     def solve(self, U):

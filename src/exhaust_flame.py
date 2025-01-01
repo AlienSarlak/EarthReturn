@@ -55,9 +55,9 @@ class Particle:
         self.position[0] += self.velocity[0]
         self.position[1] += self.velocity[1]
 
-        if self.position[1] < self.initial_position[1]:
-            self.lifetime = 0
-            return
+        # if self.position[1] < self.initial_position[1]:
+        #     self.lifetime = 0
+        #     return
 
         # Detect collision with ground
         if self.position[1] >= self.ground_level - self.radius:
