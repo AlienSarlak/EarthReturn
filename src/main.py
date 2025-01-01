@@ -3,31 +3,25 @@ from rocket import Rocket
 from state_vector import State_Vector
 from visualize import Visualize
 from mpc_controller import MPCController
-from casadi import DM as ca_dm
-from math import radians, degrees
+from math import radians, degrees, sin, cos
 from state_vector import State_Vector
 import time
-
-
-def mpc_vector(state_vector: State_Vector):
-    # state_vector = [y, alpha, y_dot, alpha_dot]
-    real_state = ca_dm([[state_vector.y],
-                        [state_vector.y_dot]])
-    return real_state
 
 
 def main():
     print("Start ...")
 
     fps = 60
-    mass = 30
+    mass = 30  # KG
 
     visualizer = Visualize(width=800, height=1000, fps=fps)
-    # rocket_y will be a random position
-    rocket_y = 0  # in pixels
-    state = State_Vector(y=rocket_y, y_dot=0)  # initial ss vector
-    print(state)
-    rocket = Rocket(state_vector=state, mass=mass, position=(300, rocket_y))
+    rocket_y = 100  # in pixels
+    # initial SS vector
+    initial_state = State_Vector(y=rocket_y, y_dot=0, alpha=radians(30))
+    print(initial_state)
+
+    rocket = Rocket(state_vector=initial_state,
+                    mass=mass, position=(300, rocket_y))
     ps = Physics_Simulator(
         ground_height=visualizer.display_height,
         rocket=rocket)
@@ -36,20 +30,26 @@ def main():
 
     visualizer.add_object(ps)
 
-    # It means y=ground, {y_dot, alpha, alpha_dot}=0
     print(f'ps.groud_level = {
-          ps.groud_level} - ps.groud_tickness = {ps.groud_tickness}')
+          ps.groud_level} and ps.groud_tickness = {ps.groud_tickness}')
 
     # Note that rocket position is in the centre of it that is why we have
     # rocket.size.height * 0.5
     ground = ps.groud_level - ps.groud_tickness
+    x_target = visualizer.display_width * 0.5
     y_target = ground - rocket.size.height * 0.5
-    target_vector = ca_dm([[y_target],
-                           [0]])
+    target_vector = State_Vector(x=x_target,
+                                 y=y_target,
+                                 alpha=0,
+                                 x_dot=0,
+                                 y_dot=0,
+                                 alpha_dot=0)
 
     running = True
 
     thrust = 0
+    thrust_x = 0
+    thrust_y = 0
     nozzle_angle = 0
 
     print(f'initial => {rocket.state_vector}')
@@ -58,30 +58,43 @@ def main():
         visualizer.handle_events()
 
         # force should be a tuple
-        ps.rocket.apply_force(force=(0, thrust))
+        ps.rocket.apply_force(force=(thrust_x, thrust_y),
+                              point=(0, -ps.rocket.size.height*0.5),
+                              nozzel_angle=+nozzle_angle)
         ps.update_rocket_state(dt=1/fps)
 
         # optimization
-        U = mpc.setup_mpc(real_state=mpc_vector(ps.rocket.state_vector),
-                          target_vector=target_vector, dt=1/fps)
+        U = mpc.setup_mpc(current_state=ps.rocket.state_vector,
+                          target_state=target_vector, dt=1/fps)
 
         # u_opt is the optimal control
-        u_opt = mpc.solve(U)
+        # u_opt = mpc.solve(U)
 
-        thrust = u_opt[0]  # first u in the list of u_opt
-        # nozzle_angle = u_opt[0, 1]  # first angle in the list of u_opt
+        # FIXME: why row 9
+        # thrust = u_opt[0, 0]
+        # nozzle_angle = u_opt[0, 1]
+
+        thrust = -250
+        nozzle_angle = radians(30)
 
         print(f"Thrust => {"{:.2f}".format(thrust)}, \
               Nozzle Angle => {"{:.2f}".format(degrees(nozzle_angle))}")
 
+        # Note: the sin and cos used in an opposite manner because
+        # in CG angles starting at pi/2
+        thrust_x = thrust * sin(nozzle_angle)
+        thrust_y = thrust * cos(nozzle_angle)
+
         print(f"Distance to the ground: {"{:.2f}".format(y_target - ps.rocket.state_vector.y)}, \
               Velocity: {"{:.2f}".format(ps.rocket.state_vector.y_dot)}")
+
+        print(f"vector: {ps.rocket.state_vector}")
 
         print("\n")
 
         visualizer.update()
         # running = False
-        # time.sleep(0.2)
+        time.sleep(0.5)
 
     print("End ...")
 

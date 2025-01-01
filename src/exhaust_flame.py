@@ -56,7 +56,7 @@ class Particle:
         self.position[1] += self.velocity[1]
 
         if self.position[1] < self.initial_position[1]:
-            self.lifetime = -1
+            self.lifetime = 0
             return
 
         # Detect collision with ground
@@ -87,30 +87,38 @@ class Particle:
 
 class ExhaustFlame:
 
-    def __init__(self, ground, position, thrust_force, number_of_particles):
+    def __init__(self,
+                 ground: float,
+                 position: tuple,
+                 angle: float,
+                 thrust_force: tuple,
+                 number_of_particles: int):
         # Origin of the flame
         self.ground = ground
         self.position = position
         self.thrust_force = thrust_force
         self.number_of_particles = number_of_particles
+        self.angle = angle
 
         # List to hold active particles
         self.particles = []
 
     def emit(self):
-        if self.thrust_force < 5:
+        force_magnitude = math.sqrt(self.thrust_force[0]**2 +
+                                    self.thrust_force[1]**2) / 10
+        if force_magnitude < 5:
             return
         for _ in range(self.number_of_particles):
-            # Base direction vector (downward thrust)
-            angle = math.pi / 2
+            # The angle of rocket body in radians
+            angle = self.angle
             # ±30 degrees random deviation
-            deviation = random.uniform(-math.pi / 6, math.pi / 6)
+            deviation = random.normalvariate(0, math.pi / 30)
             # Random speed
-            speed = random.uniform(2, self.thrust_force)
+            speed = random.uniform(2, force_magnitude)
 
             # Calculate velocity with deviation
-            vx = math.cos(angle + deviation) * speed
-            vy = math.sin(angle + deviation) * speed
+            vx = math.sin(angle + deviation) * speed
+            vy = math.cos(angle + deviation) * speed
 
             # Create a particle
             particle = Particle(position=self.position, velocity=(

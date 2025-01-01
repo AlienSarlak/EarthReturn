@@ -4,6 +4,8 @@ from rocket import Rocket
 from elements import Elements
 from math import degrees
 from exhaust_flame import ExhaustFlame
+from math import sin, cos
+from utils import rotate_point
 
 
 class Physics_Simulator(Elements):
@@ -40,6 +42,7 @@ class Physics_Simulator(Elements):
         self.exhaust_flame = ExhaustFlame(ground=self.groud_level - self.groud_tickness,
                                           position=(0, 0),
                                           thrust_force=1,
+                                          angle=0.0,
                                           number_of_particles=250)
 
     @property
@@ -59,20 +62,29 @@ class Physics_Simulator(Elements):
 
     def draw(self, screen):
         # Draw the rocket
+
+        # Unfiltered counterclockwise rotation.
+        # The angle argument represents degrees and can be any floating point value.
+        # Negative angle amounts will rotate clockwise.
         rotated_image = pygame.transform.rotate(
-            self._rocket.image, -degrees(self._rocket.body.angle))
+            self._rocket.image, degrees(self._rocket.body.angle))
         rect = rotated_image.get_rect(
             center=(self._rocket.body.position.x, self._rocket.body.position.y))
         screen.blit(rotated_image, rect.topleft)
 
-        self.exhaust_flame.position = (
-            self._rocket.body.position.x,
-            self._rocket.body.position.y+self._rocket.size.height/2)
+        # Exhuast flame
+        self.exhaust_flame.position = rotate_point(x=rect.centerx,
+                                                   y=rect.centery +
+                                                   (self._rocket.size.height * 0.5),
+                                                   cx=rect.centerx,
+                                                   cy=rect.centery,
+                                                   angle=-self._rocket.body.angle)
 
-        self.exhaust_flame.thrust_force = abs(self._rocket.current_thrust)/10
+        self.exhaust_flame.angle = self._rocket.body.angle + self._rocket.nozzle_angle
 
-        self.exhaust_flame.number_of_particles = int(
-            self.exhaust_flame.thrust_force)*5
+        # From current_thrust we can identify the direction and magnitude
+        # of the force and there is no need for rocket angle
+        self.exhaust_flame.thrust_force = self._rocket.current_thrust
 
         # Emit new particles
         self.exhaust_flame.emit()
