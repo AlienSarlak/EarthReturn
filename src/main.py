@@ -18,7 +18,7 @@ def main():
     visualizer = Visualize(width=800, height=1000, fps=fps)
     rocket_y = 100  # in pixels
     # initial SS vector
-    initial_state = State_Vector(y=rocket_y, y_dot=0, alpha=radians(45))
+    initial_state = State_Vector(y=rocket_y, y_dot=0, alpha=radians(0))
     print(initial_state)
 
     rocket = Rocket(state_vector=initial_state,
@@ -76,8 +76,8 @@ def main():
         u_opt = mpc.solve(U)
 
         # FIXME: why row 9
-        # thrust = u_opt[0, 0]
-        # nozzle_angle = u_opt[0, 1]
+        thrust = u_opt[0, 0]
+        nozzle_angle = u_opt[0, 1]
 
         # thrust = 500
         # nozzle_angle = radians(-30.0)
@@ -96,7 +96,7 @@ def main():
 
         visualizer.update()
         # running = False
-        time.sleep(2)
+        # time.sleep(2)
 
     print("End ...")
 

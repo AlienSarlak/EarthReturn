@@ -1,10 +1,8 @@
 import casadi as ca
-from math import radians, degrees
-from numpy import matrix
 from state_vector import State_Vector
 from math import sin, cos
 from collections import namedtuple
-from utils import state_space_to_mpc_vector, mpc_vector_to_state_space
+from utils import state_space_to_mpc_vector
 
 
 class MPCController:
@@ -20,42 +18,41 @@ class MPCController:
         self.N = N
         self.opti = ca.Opti()
         self.nominal = State_Vector()
+        self.F_T_nominal = 0.0
         self.rocket_height = rocket_height
         self.I = (1/12)*mass*(rocket_height**2)
 
     def evolution(self, current_state: ca.DM, u: ca.MX, dt: float):
         m = self.mass
         r = self.rocket_height * 0.5
-        control = namedtuple('control', ['F_T', 'theta'])
-        ctrl = control(F_T=u[0], theta=u[1])
 
         A = ca.MX(6, 6)
         A[0, 3] = 1
         A[1, 4] = 1
         A[2, 5] = 1
-        A[3, 2] = (1/m)*ctrl.F_T * cos(self.nominal.alpha)
-        A[3, 2] = -(1/m)*ctrl.F_T * sin(self.nominal.alpha)
+        A[3, 2] = (1/m)*self.F_T_nominal * cos(self.nominal.alpha)
+        A[4, 2] = -(1/m)*self.F_T_nominal * sin(self.nominal.alpha)
         # A = ca.DM([[0, 0, 0, 1, 0, 0],
         #            [0, 0, 0, 0, 1, 0],
         #            [0, 0, 0, 0, 0, 1],
-        #            [0, 0, (1/m)*ctrl.F_T * cos(self.nominal.alpha), 0, 0, 0],
-        #            [0, 0, -(1/m)*ctrl.F_T * sin(self.nominal.alpha), 0, 0, 0],
+        #            [0, 0, (1/m)*self.F_T_nominal * cos(self.nominal.alpha), 0, 0, 0],
+        #            [0, 0, -(1/m)*self.F_T_nominal * sin(self.nominal.alpha), 0, 0, 0],
         #            [0, 0, 0, 0, 0, 0],
         #            ])
 
         B = ca.MX(6, 2)
         B[3, 0] = (1/m)*sin(self.nominal.alpha)
-        B[3, 1] = (1/m) * ctrl.F_T*cos(self.nominal.alpha)
+        B[3, 1] = (1/m) * self.F_T_nominal*cos(self.nominal.alpha)
         B[4, 0] = (1/m)*cos(self.nominal.alpha)
-        B[4, 1] = -(1/m) * ctrl.F_T*sin(self.nominal.alpha)
-        B[5, 1] = (r/self.I)*ctrl.F_T
+        B[4, 1] = -(1/m) * self.F_T_nominal*sin(self.nominal.alpha)
+        B[5, 1] = (r/self.I)*self.F_T_nominal
 
         # B = ca.DM([[0, 0],
         #            [0, 0],
         #            [0, 0],
-        #            [(1/m)*sin(self.nominal.alpha), (1/m) * ctrl.F_T*cos(self.nominal.alpha)],
-        #            [(1/m)*cos(self.nominal.alpha), -(1/m) * ctrl.F_T*sin(self.nominal.alpha)],
-        #            [0, (r/self.I)*ctrl.F_T],
+        #            [(1/m)*sin(self.nominal.alpha), (1/m) * self.F_T_nominal*cos(self.nominal.alpha)],
+        #            [(1/m)*cos(self.nominal.alpha), -(1/m) * self.F_T_nominal*sin(self.nominal.alpha)],
+        #            [0, (r/self.I)*self.F_T_nominal],
         #            ])
 
         # make alpha to delta alpha
@@ -118,7 +115,7 @@ class MPCController:
 
         # Penalize the controls [2x2]
         R = ca.DM([[5, 0],
-                   [0, 5e4]])
+                   [0, 5]])
 
         # N horizon, each [F_T, theta]
         U = self.opti.variable(self.N, 2)
@@ -142,7 +139,7 @@ class MPCController:
 
         # 0 <= T <= T_max
         self.opti.subject_to(self.opti.bounded(self.T_max, U[:, 0], 0))
-        # -0.3 Radians < theta < 0.3 Radians
+        # -0.2 Radians < theta < 0.2 Radians
         self.opti.subject_to(self.opti.bounded(-0.2, U[:, 1], 0.2))
         return U
 
@@ -156,9 +153,10 @@ class MPCController:
             },
             "expand": True
         }
-        s_opts = {"max_iter": 100, "print_level": 0, "sb": "yes"}
+        s_opts = {"max_iter": 50, "print_level": 0, "sb": "yes"}
         self.opti.solver('ipopt', p_opts, s_opts)
 
         solution = self.opti.solve()
         U_opt = solution.value(U)
+        self.F_T_nominal = float(U_opt[0, 0])
         return U_opt
