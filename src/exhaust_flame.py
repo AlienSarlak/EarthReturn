@@ -1,6 +1,6 @@
 import pygame
 import random
-import math
+from math import sin, cos, pi
 
 
 class Particle:
@@ -31,33 +31,22 @@ class Particle:
             color = (
                 int(self.middle_color[0] * (1 - t) + self.start_color[0] * t),
                 int(self.middle_color[1] * (1 - t) + self.start_color[1] * t),
-                int(self.middle_color[2] * (1 - t) + self.start_color[2] * t)
+                int(self.middle_color[2] * (1 - t) + self.start_color[2] * t),
             )
         else:
             t = fraction * 2
             color = (
                 int(self.end_color[0] * (1 - t) + self.middle_color[0] * t),
                 int(self.end_color[1] * (1 - t) + self.middle_color[1] * t),
-                int(self.end_color[2] * (1 - t) + self.middle_color[2] * t)
+                int(self.end_color[2] * (1 - t) + self.middle_color[2] * t),
             )
-
-        # color_variation = random.randint(-30, 30)
-        # color = (
-        #     max(0, min(255, color[0] + color_variation)),
-        #     max(0, min(255, color[1] + color_variation)),
-        #     max(0, min(255, color[2] + color_variation)),
-        # )
 
         return color
 
-    def update(self):
+    def update(self, src_position: tuple):
         # Update position based on velocity
         self.position[0] += self.velocity[0]
         self.position[1] += self.velocity[1]
-
-        # if self.position[1] < self.initial_position[1]:
-        #     self.lifetime = 0
-        #     return
 
         # Detect collision with ground
         if self.position[1] >= self.ground_level - self.radius:
@@ -66,11 +55,15 @@ class Particle:
             self.velocity[1] = -self.velocity[1] * bounce_factor
             self.velocity[0] += random.uniform(-2, 2)
             self.position[1] = self.ground_level - self.radius
-            self.lifetime -= 15
+            self.lifetime -= 10
 
         else:
             # Decrease lifetime
             self.lifetime -= 2
+
+        # Ensure particles are not on the body of the rocket
+        if (src_position[1] - self.position[1]) > 0:
+            self.lifetime -= 10
 
         # Shrink particle as it ages
         self.radius = max(1, self.radius - 0.1)
@@ -91,12 +84,12 @@ class ExhaustFlame:
                  ground: float,
                  position: tuple,
                  angle: float,
-                 thrust_force: tuple,
+                 thrust_force: float,
                  number_of_particles: int):
         # Origin of the flame
         self.ground = ground
         self.position = position
-        self.thrust_force = thrust_force
+        self.thrust_force = abs(thrust_force)
         self.number_of_particles = number_of_particles
         self.angle = angle
 
@@ -104,21 +97,20 @@ class ExhaustFlame:
         self.particles = []
 
     def emit(self):
-        force_magnitude = math.sqrt(self.thrust_force[0]**2 +
-                                    self.thrust_force[1]**2) / 10
+        force_magnitude = abs(self.thrust_force) / 10
         if force_magnitude < 5:
             return
         for _ in range(self.number_of_particles):
             # The angle of rocket body in radians
             angle = self.angle
             # ±30 degrees random deviation
-            deviation = random.normalvariate(0, math.pi / 30)
+            deviation = random.normalvariate(0, pi / 30)
             # Random speed
             speed = random.uniform(2, force_magnitude)
 
             # Calculate velocity with deviation
-            vx = math.sin(angle + deviation) * speed
-            vy = math.cos(angle + deviation) * speed
+            vx = sin(angle + deviation) * speed
+            vy = cos(angle + deviation) * speed
 
             # Create a particle
             particle = Particle(position=self.position, velocity=(
@@ -129,7 +121,7 @@ class ExhaustFlame:
     def update(self):
         # Update all particles
         for particle in self.particles:
-            particle.update()
+            particle.update(self.position)
 
         # Remove dead particles
         self.particles = [p for p in self.particles if p.is_alive()]

@@ -1,14 +1,17 @@
 import numpy as np
 from state_vector import State_Vector
 from casadi import DM as ca_dm
-
+from math import pi
 import numpy as np
 
 
 def rotate_point(x, y, cx, cy, angle):
-    # Translate the point to the origin
+    # Translate the point to the origin based on pymunk
+    # in pymunk zero degree is on north and positive angle is cw
+    # while in math zero is on east and positive angles are ccw
     translated_point = np.array([x - cx, y - cy])
 
+    # angle = (pi/2) - angle
     # Define the rotation matrix
     rotation_matrix = np.array([
         [np.cos(angle), -np.sin(angle)],

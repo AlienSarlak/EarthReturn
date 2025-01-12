@@ -18,11 +18,12 @@ def main():
     visualizer = Visualize(width=800, height=1000, fps=fps)
     rocket_y = 100  # in pixels
     # initial SS vector
-    initial_state = State_Vector(y=rocket_y, y_dot=0, alpha=radians(0))
+    initial_state = State_Vector(
+        x=300, y=rocket_y, y_dot=0, alpha=radians(-30))
     print(initial_state)
 
     rocket = Rocket(state_vector=initial_state,
-                    mass=mass, position=(300, rocket_y))
+                    mass=mass, position=(initial_state.x, initial_state.y))
     ps = Physics_Simulator(
         ground_height=visualizer.display_height,
         rocket=rocket)
@@ -39,6 +40,7 @@ def main():
     ground = ps.groud_level - ps.groud_tickness
     x_target = visualizer.display_width * 0.5
     y_target = ground - rocket.size.height * 0.5
+
     target_vector = State_Vector(x=x_target,
                                  y=y_target,
                                  alpha=0,
@@ -49,8 +51,6 @@ def main():
     running = True
 
     thrust = 0
-    thrust_x = 0
-    thrust_y = 0
     nozzle_angle = 0
 
     print(f'initial => {rocket.state_vector}')
@@ -59,13 +59,9 @@ def main():
         visualizer.handle_events()
 
         # force should be a tuple
-        ps.rocket.apply_force(force=(thrust_x, thrust_y),
-                              point=rotate_point(x=0,
-                                                 y=ps.rocket.size.height * 0.5,
-                                                 cx=0,
-                                                 cy=0,
-                                                 angle=nozzle_angle),
-                              nozzel_angle=nozzle_angle)
+        ps.rocket.apply_force(force=thrust,
+                              nozzle_angle=nozzle_angle)
+
         ps.update_rocket_state(dt=1/fps)
 
         # optimization
@@ -75,18 +71,14 @@ def main():
         # u_opt is the optimal control
         u_opt = mpc.solve(U)
 
-        # FIXME: why row 9
         thrust = u_opt[0, 0]
         nozzle_angle = u_opt[0, 1]
 
-        # thrust = 500
-        # nozzle_angle = radians(-30.0)
+        # thrust = -200
+        # nozzle_angle = radians(0.0)
 
         print(f"Thrust => {"{:.2f}".format(thrust)}, \
               Nozzle Angle => {"{:.2f}".format(degrees(nozzle_angle))}")
-
-        thrust_x = thrust * sin(nozzle_angle)
-        thrust_y = thrust * cos(nozzle_angle)
 
         print(f"vector: {ps.rocket.state_vector}")
         print(f"Distance to the ground: {"{:.2f}".format(y_target - ps.rocket.state_vector.y)}, \
@@ -96,7 +88,7 @@ def main():
 
         visualizer.update()
         # running = False
-        # time.sleep(2)
+        # time.sleep(0.2)
 
     print("End ...")
 

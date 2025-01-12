@@ -2,6 +2,8 @@ import pygame
 import pymunk
 import os
 from state_vector import State_Vector
+from utils import rotate_point
+from math import sin, cos, pi, degrees
 
 
 class Size:
@@ -68,14 +70,36 @@ class Rocket:
         self.state_vector.y_dot = self.body.velocity.y
         self.state_vector.alpha_dot = self.body.angular_velocity
 
-    def apply_force(self, force: tuple,
-                    point: tuple = (0, 0),
-                    nozzel_angle: float = 0.0):
+    def apply_force(self, force: float,
+                    nozzle_angle: float = 0.0):
         # the unit must be 100 times since pymunk understand pixel/second (pps)
-        self.nozzle_angle = nozzel_angle
-        self.current_thrust = (force[0], force[1])
-        force = tuple([x * 100 for x in force])
-        self.body.apply_force_at_local_point(force=force, point=point)
+        self.current_thrust = force
+        self.nozzle_angle = nozzle_angle
+
+        force *= 100
+
+        force_point_local = (0, self.size.height * 0.5)
+
+        force_point_rotated = rotate_point(x=force_point_local[0],
+                                           y=force_point_local[1],
+                                           cx=0,
+                                           cy=0,
+                                           angle=-self.body.angle)
+
+        # Convert local force application point to world coordinates
+        force_point_world = (
+            self.body.position.x + force_point_rotated[0],
+            self.body.position.y + force_point_rotated[1]
+        )
+
+        self.wpx = force_point_world[0]
+        self.wpy = force_point_world[1]
+
+        force_v = (force*cos(-self.body.angle+nozzle_angle+(pi/2)),
+                   force*sin(-self.body.angle+nozzle_angle+(pi/2)))
+        # self.shape.body.apply_force_at_local_point(force=force, point=point)
+        self.body.apply_force_at_world_point(
+            force=force_v, point=force_point_world)
 
     def __repr__(self) -> str:
         return (f"Rocket: mass={self.mass}, position={self.position}, "

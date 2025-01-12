@@ -4,7 +4,7 @@ from rocket import Rocket
 from elements import Elements
 from math import degrees
 from exhaust_flame import ExhaustFlame
-from math import sin, cos
+from math import pi
 from utils import rotate_point
 
 
@@ -57,9 +57,6 @@ class Physics_Simulator(Elements):
         # return f"{self._space.debug_draw(self._print_options)}"
         return f"p: {self._rocket.body.position}, v: {self._rocket.body.velocity}"
 
-    def apply_forces_to_rocket(self, force):
-        self._rocket.apply_force(force=force)
-
     def draw(self, screen):
         # Draw the rocket
 
@@ -68,6 +65,7 @@ class Physics_Simulator(Elements):
         # Negative angle amounts will rotate clockwise.
         rotated_image = pygame.transform.rotate(
             self._rocket.image, degrees(self._rocket.body.angle))
+
         rect = rotated_image.get_rect(
             center=(self._rocket.body.position.x, self._rocket.body.position.y))
         screen.blit(rotated_image, rect.topleft)
@@ -88,6 +86,13 @@ class Physics_Simulator(Elements):
 
         # Emit new particles
         self.exhaust_flame.emit()
+
+        #########################################################
+        #########################################################
+        #########################################################
+        #########################################################
+        # pygame.draw.circle(screen, (0, 0, 255), (int(
+        #     self._rocket.wpx), int(self._rocket.wpy)), 10)
 
         # Update and draw particles
         self.exhaust_flame.update()
