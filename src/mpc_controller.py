@@ -72,10 +72,6 @@ class MPCController:
     def setup_mpc(
         self, current_state: State_Vector, target_state: State_Vector, dt: float
     ):
-        # FIXME: +pi might not needed!
-        current_state.alpha-=0
-        target_state.alpha-=0
-
         self.nominal = current_state
 
         X = state_space_to_mpc_vector(current_state)
@@ -83,25 +79,33 @@ class MPCController:
 
         residual = X - Z
 
+        criteria_dist_to_X = self.opti.parameter()
+        criteria_dot_X = self.opti.parameter()
         criteria_dist_to_ground = self.opti.parameter()
-        criteria_falling_velocity = self.opti.parameter()
+        criteria_dot_y = self.opti.parameter()
 
         # FIXME: not correct
+        # x
+        self.opti.set_value(criteria_dist_to_X, abs(residual[0]))
+        # dot_x
+        self.opti.set_value(criteria_dot_X, abs(residual[3]))
         # y
         self.opti.set_value(criteria_dist_to_ground, abs(residual[1]))
         # dot y
-        self.opti.set_value(criteria_falling_velocity, abs(residual[4]))
+        self.opti.set_value(criteria_dot_y, abs(residual[4]))
 
         # Weight to penalize the differences in target and current state
-        q = (5000 / criteria_dist_to_ground + 1e-6) * (criteria_falling_velocity)
+        q_y = (5000 / criteria_dist_to_ground + 1e-6) * (criteria_dot_y)
+
+        q_x = (20*criteria_dist_to_X) * ((500 / criteria_dist_to_ground + 1e-6))
 
         Q = ca.MX(6, 6)
-        Q[0, 0] = q
-        Q[1, 1] = q
-        Q[2, 2] = q
-        Q[3, 3] = q
-        Q[4, 4] = q
-        Q[5, 5] = q
+        Q[0, 0] = q_x
+        Q[1, 1] = q_y
+        Q[2, 2] = q_y
+        Q[3, 3] = q_x
+        Q[4, 4] = q_y
+        Q[5, 5] = q_y
 
         # Penalize the distance to target [6x6]
         # Q = ca.MX([[q, 0, 0, 0, 0, 0],
@@ -113,7 +117,7 @@ class MPCController:
         #            ])
 
         # Penalize the controls [2x2]
-        R = ca.DM([[2, 0], [0, 500]])
+        R = ca.DM([[2, 0], [0, 25000]])
 
         # N horizon, each [F_T, theta]
         U = self.opti.variable(self.N, 2)

@@ -3,9 +3,8 @@ from rocket import Rocket
 from state_vector import State_Vector
 from visualize import Visualize
 from mpc_controller import MPCController
-from math import radians, degrees, sin, cos
+from math import radians, degrees
 from state_vector import State_Vector
-from utils import rotate_point
 import time
 
 
@@ -19,7 +18,7 @@ def main():
     rocket_y = 100  # in pixels
     # initial SS vector
     initial_state = State_Vector(
-        x=300, y=rocket_y, y_dot=0, alpha=radians(-30))
+        x=500, y=rocket_y, y_dot=0, alpha=radians(90))
     print(initial_state)
 
     rocket = Rocket(state_vector=initial_state,
