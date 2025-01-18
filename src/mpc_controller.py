@@ -26,8 +26,8 @@ class MPCController:
         A[0, 3] = 1
         A[1, 4] = 1
         A[2, 5] = 1
-        A[3, 2] = -(1 / m) * self.F_T_nominal * 1
-        A[4, 2] = +(1 / m) * self.F_T_nominal * p_alpha
+        A[3, 2] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
+        A[4, 2] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
         # A = ca.DM([[0, 0, 0, 1, 0, 0],
         #            [0, 0, 0, 0, 1, 0],
         #            [0, 0, 0, 0, 0, 1],
@@ -37,10 +37,10 @@ class MPCController:
         #            ])
 
         B = ca.MX(6, 2)
-        B[3, 0] = (1 / m) * p_alpha
-        B[3, 1] = -(1 / m) * self.F_T_nominal * 1
-        B[4, 0] = (1 / m) * 1
-        B[4, 1] = +(1 / m) * self.F_T_nominal * p_alpha
+        B[3, 0] = (1 / m) * sin(p_alpha)
+        B[3, 1] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
+        B[4, 0] = (1 / m) * cos(p_alpha)
+        B[4, 1] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
         B[5, 1] = +(r / self.I) * self.F_T_nominal
 
         # B = ca.DM([[0, 0],
@@ -122,6 +122,32 @@ class MPCController:
             ]
         )
 
+
+        #########################################
+
+        self.opti.set_value(q, 1e3)
+        self.opti.set_value(alpha_penalty, 4e3)
+        self.opti.set_value(dot_y_penalty, 4e3 / (abs(residual[1]/target_state.y) + 1))
+        self.opti.set_value(dot_x_penalty, 8e3)
+
+        Q_F = ca.MX(6, 6)
+        Q[0, 0] = dot_x_penalty
+        Q[1, 1] = q
+        Q[2, 2] = q
+        Q[3, 3] = q
+        Q[4, 4] = dot_y_penalty
+        Q[5, 5] = alpha_penalty
+
+        R_F = ca.DM(
+            [
+                [5, 0],
+                [0, 1e5],
+            ]
+        )
+
+
+        #########################################
+
         # N horizon, each [F_T, theta]
         U = self.opti.variable(self.N, 2)
         cost = 0
@@ -134,7 +160,7 @@ class MPCController:
             cost = cost + cost_i
 
         # Putting more weight on the last step
-        cost = cost + (X - Z).T @ Q @ (X - Z)
+        cost = cost + (X - Z).T @ Q_F @ (X - Z) + u_i @ R_F @ u_i.T
 
         self.opti.minimize(cost)
 
