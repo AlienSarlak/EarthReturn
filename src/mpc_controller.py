@@ -26,22 +26,22 @@ class MPCController:
         A[0, 3] = 1
         A[1, 4] = 1
         A[2, 5] = 1
-        A[3, 2] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
-        A[4, 2] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
+        A[3, 2] = -(1 / m) * self.F_T_nominal * 1
+        A[4, 2] = +(1 / m) * self.F_T_nominal * p_alpha
         # A = ca.DM([[0, 0, 0, 1, 0, 0],
         #            [0, 0, 0, 0, 1, 0],
         #            [0, 0, 0, 0, 0, 1],
-        #            [0, 0, (1/m)*self.F_T_nominal * cos(p_alpha), 0, 0, 0],
-        #            [0, 0, -(1/m)*self.F_T_nominal * sin(p_alpha), 0, 0, 0],
+        #            [0, 0, -(1/m)*self.F_T_nominal * cos(p_alpha), 0, 0, 0],
+        #            [0, 0, (1/m)*self.F_T_nominal * sin(p_alpha), 0, 0, 0],
         #            [0, 0, 0, 0, 0, 0],
         #            ])
 
         B = ca.MX(6, 2)
-        B[3, 0] = (1 / m) * sin(p_alpha)
-        B[3, 1] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
-        B[4, 0] = (1 / m) * cos(p_alpha)
-        B[4, 1] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
-        B[5, 1] = (r / self.I) * self.F_T_nominal
+        B[3, 0] = (1 / m) * p_alpha
+        B[3, 1] = -(1 / m) * self.F_T_nominal * 1
+        B[4, 0] = (1 / m) * 1
+        B[4, 1] = +(1 / m) * self.F_T_nominal * p_alpha
+        B[5, 1] = +(r / self.I) * self.F_T_nominal
 
         # B = ca.DM([[0, 0],
         #            [0, 0],
@@ -79,33 +79,31 @@ class MPCController:
 
         residual = X - Z
 
-        criteria_dist_to_X = self.opti.parameter()
-        criteria_dot_X = self.opti.parameter()
-        criteria_dist_to_ground = self.opti.parameter()
-        criteria_dot_y = self.opti.parameter()
 
-        # FIXME: not correct
-        # x
-        self.opti.set_value(criteria_dist_to_X, abs(residual[0]))
-        # dot_x
-        self.opti.set_value(criteria_dot_X, abs(residual[3]))
+        alpha_penalty = self.opti.parameter()
+        dot_y_penalty = self.opti.parameter()
+        dot_x_penalty = self.opti.parameter()
+        q = self.opti.parameter()
+
         # y
-        self.opti.set_value(criteria_dist_to_ground, abs(residual[1]))
-        # dot y
-        self.opti.set_value(criteria_dot_y, abs(residual[4]))
+        # self.opti.set_value(criteria_dist_to_ground, distance_to_ground)
+        self.opti.set_value(q, 1e3)
+        self.opti.set_value(alpha_penalty, 6e3)
+        self.opti.set_value(dot_y_penalty, 4e3 / (abs(residual[1]/target_state.y) + 1))
+        self.opti.set_value(dot_x_penalty, 4e3)
 
         # Weight to penalize the differences in target and current state
-        q_y = (5000 / criteria_dist_to_ground + 1e-6) * (criteria_dot_y)
+        # q = (1e6 / criteria_dist_to_ground + 1)
 
-        q_x = (20*criteria_dist_to_X) * ((500 / criteria_dist_to_ground + 1e-6))
+
 
         Q = ca.MX(6, 6)
-        Q[0, 0] = q_x
-        Q[1, 1] = q_y
-        Q[2, 2] = q_y
-        Q[3, 3] = q_x
-        Q[4, 4] = q_y
-        Q[5, 5] = q_y
+        Q[0, 0] = dot_x_penalty
+        Q[1, 1] = q
+        Q[2, 2] = q
+        Q[3, 3] = q
+        Q[4, 4] = dot_y_penalty
+        Q[5, 5] = alpha_penalty
 
         # Penalize the distance to target [6x6]
         # Q = ca.MX([[q, 0, 0, 0, 0, 0],
@@ -117,7 +115,12 @@ class MPCController:
         #            ])
 
         # Penalize the controls [2x2]
-        R = ca.DM([[2, 0], [0, 25000]])
+        R = ca.DM(
+            [
+                [0.85, 0],
+                [0, 1e4],
+            ]
+        )
 
         # N horizon, each [F_T, theta]
         U = self.opti.variable(self.N, 2)
