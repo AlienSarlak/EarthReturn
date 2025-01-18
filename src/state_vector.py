@@ -23,5 +23,5 @@ class State_Vector:
             f"alpha={degrees(self.alpha):.2f}, "
             f"x_dot={self.x_dot:.2f}, "
             f"y_dot={self.y_dot:.2f}, "
-            f"alpha_dot={self.alpha_dot:.2f}"
+            f"alpha_dot={degrees(self.alpha_dot):.2f}"
         )
