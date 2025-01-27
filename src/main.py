@@ -5,6 +5,9 @@ from visualize import Visualize
 from mpc_controller import MPCController
 from math import radians, degrees
 import matplotlib.pyplot as plt
+import os
+os.environ["QT_QPA_PLATFORM"] = "xcb"
+
 import time
 
 
@@ -17,9 +20,9 @@ def main():
     mass = 30  # KG
 
     visualizer = Visualize(width=800, height=1000, fps=fps)
-    rocket_y = 100  # in pixels
+    rocket_y = 50  # in pixels
     # initial SS vector
-    initial_state = State_Vector(x=200, y=rocket_y, y_dot=0, alpha=radians(-30))
+    initial_state = State_Vector(x=600, y=rocket_y, y_dot=0, alpha=radians(+30))
     print(initial_state)
 
     rocket = Rocket(
@@ -90,10 +93,10 @@ def main():
             f"Thrust => {'{:.2f}'.format(thrust)}, \
               Nozzle Angle => {'{:.2f}'.format(degrees(nozzle_angle))}"
         )
-
+        distance_to_ground = y_target - ps.rocket.state_vector.y
         print(f"vector: {ps.rocket.state_vector}")
         print(
-            f"Distance to the ground: {'{:.2f}'.format(y_target - ps.rocket.state_vector.y)}, \
+            f"Distance to the ground: {'{:.2f}'.format(distance_to_ground)}, \
           Velocity: {'{:.2f}'.format(ps.rocket.state_vector.y_dot)}"
         )
 
@@ -111,8 +114,9 @@ def main():
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        # running = True if (current_time - start_time) < 50 else False
-        running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
+        # running = True if (current_time - start_time) < 200 else False
+        running = False if distance_to_ground <=0 else True
+        # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
 
@@ -140,29 +144,22 @@ def main():
 
     plt.style.use("seaborn-v0_8-deep")
 
-    # Create subplots
-    fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(10, 8), constrained_layout=True)
-
-    # Flatten axes for easy iteration (since it's a grid)
-    axes = axes.flatten()
-
-    for _, (ax, data, title) in enumerate(zip(axes, data_lists, titles)):
-        # ax.set_facecolor("lightgrey")
+    for i, (data, title) in enumerate(zip(data_lists, titles)):
+        fig, ax = plt.subplots(figsize=(6, 4))  # Adjust figure size if needed
         ax.plot(time_stamp, data, label=title, linewidth=2, color="blue")
 
-        ax.set_title(title, fontsize=12, fontweight="bold")
-        ax.set_xlabel("Time (s)", fontsize=10)
-        ax.set_ylabel("Value", fontsize=10)
-
-        ax.grid(which="both")
-        ax.grid(which="minor", alpha=0.2)
-        ax.grid(which="major", alpha=0.5)
-
+        # Customize each plot
+        ax.set_title(title, fontsize=14, fontweight="bold")
+        ax.set_xlabel("Time (s)", fontsize=12)
+        ax.set_ylabel("Value", fontsize=12)
+        ax.grid(which="both", linestyle="--", alpha=0.5)
         ax.legend()
 
-    # Remove the last empty subplot
-    if len(data_lists) < len(axes):
-        fig.delaxes(axes[-1])
+        # filename = f"plot_{i+1}.png"
+        # plt.savefig(filename, dpi=300, bbox_inches="tight")
+
+        # Close the figure to avoid overlap in memory
+        # plt.close()
 
     # Display the plot
     plt.suptitle(

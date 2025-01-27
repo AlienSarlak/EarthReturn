@@ -26,8 +26,8 @@ class MPCController:
         A[0, 3] = 1
         A[1, 4] = 1
         A[2, 5] = 1
-        A[3, 2] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
-        A[4, 2] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
+        A[3, 2] = -(1 / m) * self.F_T_nominal
+        A[4, 2] = +(1 / m) * self.F_T_nominal * (p_alpha)
         # A = ca.DM([[0, 0, 0, 1, 0, 0],
         #            [0, 0, 0, 0, 1, 0],
         #            [0, 0, 0, 0, 0, 1],
@@ -37,10 +37,10 @@ class MPCController:
         #            ])
 
         B = ca.MX(6, 2)
-        B[3, 0] = (1 / m) * sin(p_alpha)
-        B[3, 1] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
-        B[4, 0] = (1 / m) * cos(p_alpha)
-        B[4, 1] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
+        B[3, 0] = (1 / m) * (p_alpha)
+        B[3, 1] = -(1 / m) * self.F_T_nominal
+        B[4, 0] = (1 / m)
+        B[4, 1] = +(1 / m) * self.F_T_nominal * (p_alpha)
         B[5, 1] = +(r / self.I) * self.F_T_nominal
 
         # B = ca.DM([[0, 0],
@@ -171,7 +171,7 @@ class MPCController:
         # 0 <= T <= T_max
         self.opti.subject_to(self.opti.bounded(self.T_max, U[:, 0], 0))
         # -0.2 Radians < theta < 0.2 Radians
-        self.opti.subject_to(self.opti.bounded(-0.4, U[:, 1], 0.4))
+        self.opti.subject_to(self.opti.bounded(-1, U[:, 1],1))
         return U
 
     def solve(self, U):
