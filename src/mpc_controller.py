@@ -1,6 +1,5 @@
 import casadi as ca
 from state_vector import State_Vector
-from math import sin, cos, pi
 from utils import state_space_to_mpc_vector
 
 

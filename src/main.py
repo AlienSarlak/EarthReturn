@@ -22,7 +22,7 @@ def main():
     visualizer = Visualize(width=800, height=1000, fps=fps)
     rocket_y = 50  # in pixels
     # initial SS vector
-    initial_state = State_Vector(x=600, y=rocket_y, y_dot=0, alpha=radians(+30))
+    initial_state = State_Vector(x=200, y=rocket_y, y_dot=0, alpha=radians(5))
     print(initial_state)
 
     rocket = Rocket(
