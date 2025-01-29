@@ -76,10 +76,10 @@ class OCPController:
 
             self.opti.subject_to(x[:, k + 1] == x_k_next)
 
-            penalty = 0 #(1e6 * (x_k[4] - x_k_next[4]) ** 2)
+            penalty = 0  # (1e6 * (x_k[4] - x_k_next[4]) ** 2)
 
+            J += (1) + penalty
 
-            J += (F_t[k]) ** 2 + penalty
         # -----------------------------------------------
 
         self.opti.minimize(J)
@@ -128,13 +128,64 @@ def main():
     duration = 25
     time_step = 0.01
     trajectory, thrust, theta = ocp.solve(delta_t=time_step, duration=duration)
-    plt.figure(figsize=(16, 12))
-    plt.plot(
-        np.arange(0, duration, time_step),
-        thrust,
-        color="b",
-        label="thrust",
+
+    fig, axes = plt.subplots(4, 1, figsize=(8, 10))
+
+    # THrust
+    idx=0
+    axes[idx].plot(np.arange(0, duration, time_step), thrust, color="b", label="Thrust")
+    axes[idx].set_xlabel("Time (s)")
+    axes[idx].set_ylabel("Thrust")
+    axes[idx].set_title("Thrust Over Time")
+    axes[idx].grid(True, linestyle="--", alpha=0.7)
+    axes[idx].legend()
+
+    # Theta
+    idx=1
+    axes[idx].plot(np.arange(0, duration, time_step), theta, color="m", label="Theta")
+    axes[idx].set_xlabel("Time (s)")
+    axes[idx].set_ylabel("Theta")
+    axes[idx].set_title("Nozzle Angle Over Time")
+    axes[idx].grid(True, linestyle="--", alpha=0.7)
+    axes[idx].legend()
+
+    # alpha
+    idx=2
+    axes[idx].plot(
+        np.arange(0, duration * 100, 1),
+        trajectory[2, :],
+        color="g",
+        label="Alpha Component",
     )
+    axes[idx].set_xlabel("Time (scaled)")
+    axes[idx].set_ylabel("alpha")
+    axes[idx].set_title("alpha Over Time")
+    axes[idx].grid(True, linestyle="--", alpha=0.7)
+    axes[idx].legend()
+
+    # Trajectory
+    idx=3
+    axes[idx].plot(
+        trajectory[0, :],
+        trajectory[1, :],
+        marker="o",
+        linestyle="-",
+        color="r",
+        label="2D Trajectory",
+    )
+    axes[idx].set_xlabel("X Position")
+    axes[idx].set_ylabel("Y Position")
+    axes[idx].set_title("2D Trajectory Plot")
+    axes[idx].grid(True, linestyle="--", alpha=0.7)
+    axes[idx].legend()
+
+    # plt.figure(figsize=(16, 12))
+    # plt.plot(
+    #     np.arange(0, duration, time_step),
+    #     thrust,
+    #     color="b",
+    #     label="thrust",
+    # )
 
     # plt.plot(
     #     np.arange(0, duration *100, 1),
@@ -143,7 +194,6 @@ def main():
     #     label="trajectory",
     # )
 
-
     # plt.plot(
     #     trajectory[0, :],
     #     trajectory[1, :],
@@ -151,7 +201,7 @@ def main():
     #     color="b",
     #     label="trajectory",
     # )
-
+    plt.tight_layout()
     plt.grid(True, linestyle="--", alpha=0.7)
     plt.show()
 
