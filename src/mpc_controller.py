@@ -171,7 +171,7 @@ class MPCController:
         # 0 <= T <= T_max
         self.opti.subject_to(self.opti.bounded(self.T_max, U[:, 0], 0))
         # -0.2 Radians < theta < 0.2 Radians
-        t_limit=radians(70)
+        t_limit=radians(60)
         self.opti.subject_to(self.opti.bounded(-t_limit, U[:, 1], t_limit))
         return U
 

@@ -43,7 +43,7 @@ class Physics_Simulator(Elements):
                                           position=(0, 0),
                                           thrust_force=1,
                                           angle=0.0,
-                                          number_of_particles=250)
+                                          number_of_particles=1000)
 
     @property
     def rocket(self):
