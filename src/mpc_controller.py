@@ -28,14 +28,15 @@ class MPCController:
         ###################################
         ddot_x = -(1 / m) * F_t * ca.sin(alpha + theta)
         ddot_y = +(1 / m) * F_t * ca.cos(alpha - theta) - self.gravity
-        ddot_alpha = (r/self.I) * F_t * ca.sin(theta)
+        # FIXME: ddot_alpha seems not correct
+        ddot_alpha = (r / self.I) * F_t * ca.sin(alpha + theta)
         ###################################
 
         dot_x = current_state[3] + ddot_x * dt
-        dot_y =  current_state[4] + ddot_y * dt
-        dot_alpha =  current_state[5] + ddot_alpha * dt
+        dot_y = current_state[4] + ddot_y * dt
+        dot_alpha = current_state[5] + ddot_alpha * dt
 
-        X_dot =  ca.vertcat(
+        dot_s = ca.vertcat(
             dot_x,
             dot_y,
             dot_alpha,
@@ -44,9 +45,9 @@ class MPCController:
             ddot_alpha,
         )
 
-        return X_dot
+        return dot_s
 
-    def new_state(self,current_state: ca.DM, u: ca.MX, dt: float):
+    def new_state(self, current_state: ca.DM, u: ca.MX, dt: float):
         # In this version Euler
         new_state = current_state + self.dot_s(current_state, u, dt) * dt
         # RK4
@@ -63,7 +64,6 @@ class MPCController:
     def setup_mpc(
         self, current_state: State_Vector, target_state: State_Vector, dt: float
     ):
-
         # X is current state
         X = state_space_to_mpc_vector(current_state)
         # Z is target state
@@ -71,69 +71,55 @@ class MPCController:
 
         residual = X - Z
 
-        alpha_penalty = self.opti.parameter()
-        dot_y_penalty = self.opti.parameter()
-        dot_x_penalty = self.opti.parameter()
         q = self.opti.parameter()
 
-        # y
-        # self.opti.set_value(criteria_dist_to_ground, distance_to_ground)
-        self.opti.set_value(q, 1e3)
-        self.opti.set_value(alpha_penalty, 1e6)
-        self.opti.set_value(
-            dot_y_penalty, 4e3 / (abs(residual[1] / target_state.y) + 1)
-        )
-        self.opti.set_value(dot_x_penalty, 4e3)
-
-        # Weight to penalize the differences in target and current state
-        # q = (1e6 / criteria_dist_to_ground + 1)
-
+        self.opti.set_value(q, 1)
         Q = ca.MX(6, 6)
-        Q[0, 0] = dot_x_penalty
+        Q[0, 0] = q
         Q[1, 1] = q
-        Q[2, 2] = alpha_penalty
+        Q[2, 2] = q
         Q[3, 3] = q
-        Q[4, 4] = dot_y_penalty
-        Q[5, 5] = alpha_penalty
-
-        # Penalize the distance to target [6x6]
-        # Q = ca.MX([[q, 0, 0, 0, 0, 0],
-        #            [0, q, 0, 0, 0, 0],
-        #            [0, 0, q, 0, 0, 0],
-        #            [0, 0, 0, q, 0, 0],
-        #            [0, 0, 0, 0, q, 0],
-        #            [0, 0, 0, 0, 0, q],
-        #            ])
+        Q[4, 4] = q
+        Q[5, 5] = q
 
         # Penalize the controls [2x2]
         R = ca.DM(
             [
                 [0.85, 0],
-                [0, 1e4],
+                [0, 1e2],
             ]
         )
 
         #########################################
 
+        alpha_penalty = self.opti.parameter()
+        alpha_dot_penalty = self.opti.parameter()
+
+        dot_y_penalty = self.opti.parameter()
+        x_penalty = self.opti.parameter()
         self.opti.set_value(q, 1e3)
-        self.opti.set_value(alpha_penalty, 4e3)
+
+        self.opti.set_value(alpha_penalty, 4e7)
         self.opti.set_value(
-            dot_y_penalty, 4e3 / (abs(residual[1] / target_state.y) + 1)
+            dot_y_penalty, 5e3 / (abs(residual[1] / (target_state.y + 1e-6)))
         )
-        self.opti.set_value(dot_x_penalty, 8e3)
+
+        self.opti.set_value(alpha_dot_penalty, 5e5 * (abs(X[5])))
+
+        self.opti.set_value(x_penalty, (ca.power(residual[0],2)))
 
         Q_F = ca.MX(6, 6)
-        Q[0, 0] = dot_x_penalty
-        Q[1, 1] = q
-        Q[2, 2] = q
-        Q[3, 3] = q
-        Q[4, 4] = dot_y_penalty
-        Q[5, 5] = alpha_penalty
+        Q_F[0, 0] = x_penalty
+        Q_F[1, 1] = q
+        Q_F[2, 2] = alpha_penalty
+        Q_F[3, 3] = q
+        Q_F[4, 4] = dot_y_penalty
+        Q_F[5, 5] = alpha_dot_penalty
 
         R_F = ca.DM(
             [
                 [5, 0],
-                [0, 1e5],
+                [0, 1e3],
             ]
         )
 
@@ -176,7 +162,7 @@ class MPCController:
             },
             "expand": True,
         }
-        s_opts = {"max_iter": 50, "print_level": 0, "sb": "yes"}
+        s_opts = {"max_iter": 150, "print_level": 0, "sb": "yes"}
         self.opti.solver("ipopt", p_opts, s_opts)
 
         solution = self.opti.solve()

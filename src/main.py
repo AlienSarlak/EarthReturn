@@ -20,10 +20,11 @@ def main():
     rocket_y = 100  # in pixels
     # initial SS vector
     #
-    #   Do not set alpha > ±70
-    #    alpha must be <=70
+    #   Do not set alpha > ±50
+    #    abs(alpha) must be <=50
+    #  200 <  x  < 600
     #
-    initial_state = State_Vector(x=400, y=rocket_y, alpha=radians(+10))
+    initial_state = State_Vector(x=200, y=rocket_y, alpha=radians(+50))
     print(initial_state)
 
     rocket = Rocket(
@@ -88,11 +89,11 @@ def main():
         thrust = u_opt[0, 0]
         nozzle_angle = u_opt[0, 1]
 
-        # thrust = -200
-        # nozzle_angle = radians(0.0)
+        # thrust = -300
+        # nozzle_angle = radians(-1)
 
         print(
-            f"Thrust => {'{:.2f}'.format(thrust)}, \
+            f"Thrust => {'{:.2f}'.format(-thrust)}, \
               Nozzle Angle => {'{:.2f}'.format(degrees(nozzle_angle))}"
         )
 
@@ -116,7 +117,7 @@ def main():
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        running = True if (current_time - start_time) < 50 else False
+        running = True if (current_time - start_time) < 25 else False
         # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
