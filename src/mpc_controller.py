@@ -1,6 +1,6 @@
 import casadi as ca
 from state_vector import State_Vector
-from math import sin, cos, radians
+from math import radians
 from utils import state_space_to_mpc_vector
 
 
@@ -12,59 +12,50 @@ class MPCController:
         # N => Number of iterations
         self.N = N
         self.opti = ca.Opti()
-        self.nominal = State_Vector()
-        self.F_T_nominal = 0.0
         self.rocket_height = rocket_height
         self.I = (1 / 12) * mass * (rocket_height**2)
 
-    def evolution(self, current_state: ca.DM, u: ca.MX, dt: float):
+    def dot_s(self, current_state: ca.DM, u: ca.MX, dt: float):
+        # System Dynamic
+
         m = self.mass
         r = self.rocket_height * 0.5
-        p_alpha = self.nominal.alpha
 
-        A = ca.MX(6, 6)
-        A[0, 3] = 1
-        A[1, 4] = 1
-        A[2, 5] = 1
-        A[3, 2] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
-        A[4, 2] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
-        # A = ca.DM([[0, 0, 0, 1, 0, 0],
-        #            [0, 0, 0, 0, 1, 0],
-        #            [0, 0, 0, 0, 0, 1],
-        #            [0, 0, -(1/m)*self.F_T_nominal * cos(p_alpha), 0, 0, 0],
-        #            [0, 0, (1/m)*self.F_T_nominal * sin(p_alpha), 0, 0, 0],
-        #            [0, 0, 0, 0, 0, 0],
-        #            ])
+        alpha = current_state[2]
+        F_t = u[0]
+        theta = u[1]
 
-        B = ca.MX(6, 2)
-        B[3, 0] = (1 / m) * sin(p_alpha)
-        B[3, 1] = -(1 / m) * self.F_T_nominal * cos(p_alpha)
-        B[4, 0] = (1 / m) * cos(p_alpha)
-        B[4, 1] = +(1 / m) * self.F_T_nominal * sin(p_alpha)
-        B[5, 1] = +(r / self.I) * self.F_T_nominal
+        ###################################
+        ddot_x = -(1 / m) * F_t * ca.sin(alpha + theta)
+        ddot_y = +(1 / m) * F_t * ca.cos(alpha - theta) - self.gravity
+        ddot_alpha = (r/self.I) * F_t * ca.sin(theta)
+        ###################################
 
-        # B = ca.DM([[0, 0],
-        #            [0, 0],
-        #            [0, 0],
-        #            [(1/m)*sin(p_alpha), (1/m) * self.F_T_nominal*cos(p_alpha)],
-        #            [(1/m)*cos(p_alpha), -(1/m) * self.F_T_nominal*sin(p_alpha)],
-        #            [0, (r/self.I)*self.F_T_nominal],
-        #            ])
+        dot_x = current_state[3] + ddot_x * dt
+        dot_y =  current_state[4] + ddot_y * dt
+        dot_alpha =  current_state[5] + ddot_alpha * dt
 
-        # make alpha to delta alpha
-        delta_alpha = current_state[2] - (p_alpha)
+        X_dot =  ca.vertcat(
+            dot_x,
+            dot_y,
+            dot_alpha,
+            ddot_x,
+            ddot_y,
+            ddot_alpha,
+        )
 
-        s = ca.MX(6, 1)
-        s[0, 0] = current_state[0]
-        s[1, 0] = current_state[1]
-        s[2, 0] = delta_alpha
-        s[3, 0] = current_state[3]
-        s[4, 0] = current_state[4]
-        s[5, 0] = current_state[5]
+        return X_dot
 
-        X_dot = A @ s + B @ u
-        X_new = current_state + X_dot * dt
-        return X_new
+    def new_state(self,current_state: ca.DM, u: ca.MX, dt: float):
+        # In this version Euler
+        new_state = current_state + self.dot_s(current_state, u, dt) * dt
+        # RK4
+        # k1 = self.dot_s(current_state, u, dt)
+        # k2 = self.dot_s(current_state + 0.5 * dt * k1, u, dt)
+        # k3 = self.dot_s(current_state + 0.5 * dt * k2, u, dt)
+        # k4 = self.dot_s(current_state + dt * k3, u, dt)
+        # new_state = current_state + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
+        return new_state
 
     ########################################################
     #                   Setup MPC
@@ -72,13 +63,13 @@ class MPCController:
     def setup_mpc(
         self, current_state: State_Vector, target_state: State_Vector, dt: float
     ):
-        self.nominal = current_state
 
+        # X is current state
         X = state_space_to_mpc_vector(current_state)
+        # Z is target state
         Z = state_space_to_mpc_vector(target_state)
 
         residual = X - Z
-
 
         alpha_penalty = self.opti.parameter()
         dot_y_penalty = self.opti.parameter()
@@ -88,19 +79,19 @@ class MPCController:
         # y
         # self.opti.set_value(criteria_dist_to_ground, distance_to_ground)
         self.opti.set_value(q, 1e3)
-        self.opti.set_value(alpha_penalty, 6e3)
-        self.opti.set_value(dot_y_penalty, 4e3 / (abs(residual[1]/target_state.y) + 1))
+        self.opti.set_value(alpha_penalty, 1e6)
+        self.opti.set_value(
+            dot_y_penalty, 4e3 / (abs(residual[1] / target_state.y) + 1)
+        )
         self.opti.set_value(dot_x_penalty, 4e3)
 
         # Weight to penalize the differences in target and current state
         # q = (1e6 / criteria_dist_to_ground + 1)
 
-
-
         Q = ca.MX(6, 6)
         Q[0, 0] = dot_x_penalty
         Q[1, 1] = q
-        Q[2, 2] = q
+        Q[2, 2] = alpha_penalty
         Q[3, 3] = q
         Q[4, 4] = dot_y_penalty
         Q[5, 5] = alpha_penalty
@@ -122,12 +113,13 @@ class MPCController:
             ]
         )
 
-
         #########################################
 
         self.opti.set_value(q, 1e3)
         self.opti.set_value(alpha_penalty, 4e3)
-        self.opti.set_value(dot_y_penalty, 4e3 / (abs(residual[1]/target_state.y) + 1))
+        self.opti.set_value(
+            dot_y_penalty, 4e3 / (abs(residual[1] / target_state.y) + 1)
+        )
         self.opti.set_value(dot_x_penalty, 8e3)
 
         Q_F = ca.MX(6, 6)
@@ -145,7 +137,6 @@ class MPCController:
             ]
         )
 
-
         #########################################
 
         # N horizon, each [F_T, theta]
@@ -156,7 +147,7 @@ class MPCController:
             u_i = U[i, :]
             cost_i = (X - Z).T @ Q @ (X - Z) + u_i @ R @ u_i.T
 
-            X = self.evolution(current_state=X, u=u_i.T, dt=dt)
+            X = self.new_state(current_state=X, u=u_i.T, dt=dt)
             cost = cost + cost_i
 
         # Putting more weight on the last step
@@ -171,7 +162,7 @@ class MPCController:
         # 0 <= T <= T_max
         self.opti.subject_to(self.opti.bounded(self.T_max, U[:, 0], 0))
         # -0.2 Radians < theta < 0.2 Radians
-        t_limit=radians(60)
+        t_limit = radians(60)
         self.opti.subject_to(self.opti.bounded(-t_limit, U[:, 1], t_limit))
         return U
 
@@ -190,5 +181,4 @@ class MPCController:
 
         solution = self.opti.solve()
         U_opt = solution.value(U)
-        self.F_T_nominal = float(U_opt[0, 0])
         return U_opt

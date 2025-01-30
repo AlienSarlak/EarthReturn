@@ -13,7 +13,7 @@ def main():
 
     # print(plt.style.available)
 
-    fps = 60
+    fps = 50
     mass = 30  # KG
 
     visualizer = Visualize(width=800, height=1000, fps=fps)
@@ -21,8 +21,9 @@ def main():
     # initial SS vector
     #
     #   Do not set alpha > ±70
+    #    alpha must be <=70
     #
-    initial_state = State_Vector(x=200, y=rocket_y, alpha=radians(-70))
+    initial_state = State_Vector(x=400, y=rocket_y, alpha=radians(+10))
     print(initial_state)
 
     rocket = Rocket(
@@ -115,7 +116,7 @@ def main():
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        running = True if (current_time - start_time) < 20 else False
+        running = True if (current_time - start_time) < 50 else False
         # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
