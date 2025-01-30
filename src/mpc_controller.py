@@ -1,6 +1,6 @@
 import casadi as ca
 from state_vector import State_Vector
-from math import sin, cos, pi
+from math import sin, cos, radians
 from utils import state_space_to_mpc_vector
 
 
@@ -171,7 +171,8 @@ class MPCController:
         # 0 <= T <= T_max
         self.opti.subject_to(self.opti.bounded(self.T_max, U[:, 0], 0))
         # -0.2 Radians < theta < 0.2 Radians
-        self.opti.subject_to(self.opti.bounded(-0.4, U[:, 1], 0.4))
+        t_limit=radians(70)
+        self.opti.subject_to(self.opti.bounded(-t_limit, U[:, 1], t_limit))
         return U
 
     def solve(self, U):

@@ -19,7 +19,7 @@ def main():
     visualizer = Visualize(width=800, height=1000, fps=fps)
     rocket_y = 100  # in pixels
     # initial SS vector
-    initial_state = State_Vector(x=200, y=rocket_y, y_dot=0, alpha=radians(-30))
+    initial_state = State_Vector(x=200, y=rocket_y, y_dot=0, alpha=radians(-90))
     print(initial_state)
 
     rocket = Rocket(
@@ -111,8 +111,8 @@ def main():
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        # running = True if (current_time - start_time) < 50 else False
-        running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
+        running = True if (current_time - start_time) < 15 else False
+        # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
 
