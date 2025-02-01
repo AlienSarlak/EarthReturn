@@ -22,9 +22,9 @@ def main():
     #
     #   Do not set alpha > ±50
     #    abs(alpha) must be <=50
-    #  200 <  x  < 600
+    #  300 <  x  < 500
     #
-    initial_state = State_Vector(x=550, y=rocket_y, alpha=radians(-60))
+    initial_state = State_Vector(x=200, y=rocket_y, alpha=radians(+50))
     print(initial_state)
 
     rocket = Rocket(
@@ -61,10 +61,16 @@ def main():
     print(f"initial => {rocket.state_vector}")
 
     alpha_list = []
-    nozzle_list = []
     doty_list = []
     x_list = []
     dotalpha_list = []
+
+    p_alpha_list = []
+    p_doty_list = []
+    p_x_list = []
+    p_dotalpha_list = []
+
+    nozzle_list = []
     thrust_list = []
     time_stamp = []
 
@@ -84,7 +90,7 @@ def main():
         )
 
         # u_opt is the optimal control
-        u_opt = mpc.solve(U)
+        u_opt,predicted_state  = mpc.solve(U)
 
         thrust = u_opt[0, 0]
         nozzle_angle = u_opt[0, 1]
@@ -114,15 +120,19 @@ def main():
         dotalpha_list.append(degrees(ps.rocket.state_vector.alpha_dot))
         thrust_list.append(abs(thrust))
 
+
+        p_alpha_list.append(degrees(predicted_state[2]))
+        p_doty_list.append(predicted_state[4])
+        p_x_list.append(predicted_state[0])
+        p_dotalpha_list.append(degrees(predicted_state[5]))
+
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        running = True if (current_time - start_time) < 50 else False
-        # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
+        # running = True if (current_time - start_time) < 10 else False
+        running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
-
-    # DRAW PLOTS
 
     # Titles for each plot
     titles = [
@@ -134,24 +144,32 @@ def main():
         "Thrust (N)",
     ]
 
-    # Data lists to plot
+    # Data lists to plot (each tuple contains original and p_ version)
     data_lists = [
-        alpha_list,
-        dotalpha_list,
-        doty_list,
-        x_list,
-        nozzle_list,
-        thrust_list,
+        (alpha_list, p_alpha_list),
+        (dotalpha_list, p_dotalpha_list),
+        (doty_list, p_doty_list),
+        (x_list, p_x_list),
+        (nozzle_list, None),  # No corresponding p_ data
+        (thrust_list, None),  # No corresponding p_ data
     ]
 
     plt.style.use("seaborn-v0_8-deep")
 
+    # Create subplots
+    fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(10, 8), constrained_layout=True)
 
+    # Flatten axes for easy iteration (since it's a grid)
+    axes = axes.flatten()
 
-    for i, (data, title) in enumerate(zip(data_lists, titles)):
-        fig, ax = plt.subplots(figsize=(10, 4))  # Create a new figure for each plot
+    # Define colors for the two sets of data
+    colors = ["blue", "red"]  # Original data in blue, p_ data in red
 
-        ax.plot(time_stamp, data, label=title, linewidth=2, color="blue")
+    for i, (ax, (data, p_data), title) in enumerate(zip(axes, data_lists, titles)):
+        ax.plot(time_stamp, data, label=f"{title} (Original)", linewidth=2, color=colors[0])
+
+        if p_data is not None:
+            ax.plot(time_stamp, p_data, label=f"{title} (Predicted)", linewidth=2, color=colors[1], linestyle="dashed")
 
         ax.set_title(title, fontsize=12, fontweight="bold")
         ax.set_xlabel("Time (s)", fontsize=10)
@@ -163,11 +181,70 @@ def main():
 
         ax.legend()
 
-        # Save each figure separately
-        filename = f"{i}.png"
-        plt.savefig(filename, dpi=300, bbox_inches="tight")
+    # Display the plot
+    plt.suptitle(
+        "Smooth Line Charts of Variables vs Time", fontsize=16, fontweight="bold"
+    )
+    plt.show()
 
-        plt.close(fig)
+
+    # # DRAW PLOTS
+
+    # # Titles for each plot
+    # titles = [
+    #     "Alpha (degree)",
+    #     "DotAlpha (degree/sec)",
+    #     "DotY (m/s)",
+    #     "X (m)",
+    #     "Nozzle (degree)",
+    #     "Thrust (N)",
+    # ]
+
+    # # Data lists to plot
+    # data_lists = [
+    #     alpha_list,
+    #     dotalpha_list,
+    #     doty_list,
+    #     x_list,
+    #     nozzle_list,
+    #     thrust_list,
+    # ]
+
+    # plt.style.use("seaborn-v0_8-deep")
+
+    # # Create subplots
+    # fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(10, 8), constrained_layout=True)
+
+    # # Flatten axes for easy iteration (since it's a grid)
+    # axes = axes.flatten()
+
+    # for i, (ax, data, title) in enumerate(zip(axes, data_lists, titles)):
+    #     # ax.set_facecolor("lightgrey")
+    #     ax.plot(time_stamp, data, label=title, linewidth=2, color="blue")
+
+    #     ax.set_title(title, fontsize=12, fontweight="bold")
+    #     ax.set_xlabel("Time (s)", fontsize=10)
+    #     ax.set_ylabel("Value", fontsize=10)
+
+    #     ax.grid(which="both")
+    #     ax.grid(which="minor", alpha=0.2)
+    #     ax.grid(which="major", alpha=0.5)
+
+    #     ax.legend()
+
+    # # Remove the last empty subplot
+    # if len(data_lists) < len(axes):
+    #     fig.delaxes(axes[-1])
+
+    # # Display the plot
+    # plt.suptitle(
+    #     "Smooth Line Charts of Variables vs Time", fontsize=16, fontweight="bold"
+    # )
+    # plt.show()
+
+
+
+
 
 
 
@@ -176,7 +253,26 @@ if __name__ == "__main__":
     main()
 
 
+    # for i, (data, title) in enumerate(zip(data_lists, titles)):
+    #     fig, ax = plt.subplots(figsize=(10, 4))  # Create a new figure for each plot
 
+    #     ax.plot(time_stamp, data, label=title, linewidth=2, color="blue")
+
+    #     ax.set_title(title, fontsize=12, fontweight="bold")
+    #     ax.set_xlabel("Time (s)", fontsize=10)
+    #     ax.set_ylabel("Value", fontsize=10)
+
+    #     ax.grid(which="both")
+    #     ax.grid(which="minor", alpha=0.2)
+    #     ax.grid(which="major", alpha=0.5)
+
+    #     ax.legend()
+
+    #     # Save each figure separately
+    #     filename = f"{i}.png"
+    #     plt.savefig(filename, dpi=300, bbox_inches="tight")
+
+    #     plt.close(fig)
 
 
     # # Create subplots
