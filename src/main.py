@@ -24,7 +24,7 @@ def main():
     #    abs(alpha) must be <=50
     #  200 <  x  < 600
     #
-    initial_state = State_Vector(x=200, y=rocket_y, alpha=radians(+50))
+    initial_state = State_Vector(x=550, y=rocket_y, alpha=radians(-60))
     print(initial_state)
 
     rocket = Rocket(
@@ -117,7 +117,7 @@ def main():
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        running = True if (current_time - start_time) < 25 else False
+        running = True if (current_time - start_time) < 50 else False
         # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
@@ -146,14 +146,11 @@ def main():
 
     plt.style.use("seaborn-v0_8-deep")
 
-    # Create subplots
-    fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(10, 8), constrained_layout=True)
 
-    # Flatten axes for easy iteration (since it's a grid)
-    axes = axes.flatten()
 
-    for _, (ax, data, title) in enumerate(zip(axes, data_lists, titles)):
-        # ax.set_facecolor("lightgrey")
+    for i, (data, title) in enumerate(zip(data_lists, titles)):
+        fig, ax = plt.subplots(figsize=(10, 4))  # Create a new figure for each plot
+
         ax.plot(time_stamp, data, label=title, linewidth=2, color="blue")
 
         ax.set_title(title, fontsize=12, fontweight="bold")
@@ -166,16 +163,48 @@ def main():
 
         ax.legend()
 
-    # Remove the last empty subplot
-    if len(data_lists) < len(axes):
-        fig.delaxes(axes[-1])
+        # Save each figure separately
+        filename = f"{i}.png"
+        plt.savefig(filename, dpi=300, bbox_inches="tight")
 
-    # Display the plot
-    plt.suptitle(
-        "Smooth Line Charts of Variables vs Time", fontsize=16, fontweight="bold"
-    )
-    plt.show()
+        plt.close(fig)
+
+
 
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+    # # Create subplots
+    # fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(10, 8), constrained_layout=True)
+
+    # # Flatten axes for easy iteration (since it's a grid)
+    # axes = axes.flatten()
+
+    # for i, (ax, data, title) in enumerate(zip(axes, data_lists, titles)):
+    #     # ax.set_facecolor("lightgrey")
+    #     ax.plot(time_stamp, data, label=title, linewidth=2, color="blue")
+
+    #     ax.set_title(title, fontsize=12, fontweight="bold")
+    #     ax.set_xlabel("Time (s)", fontsize=10)
+    #     ax.set_ylabel("Value", fontsize=10)
+
+    #     ax.grid(which="both")
+    #     ax.grid(which="minor", alpha=0.2)
+    #     ax.grid(which="major", alpha=0.5)
+
+    #     ax.legend()
+
+    # # Remove the last empty subplot
+    # if len(data_lists) < len(axes):
+    #     fig.delaxes(axes[-1])
+
+    # # Display the plot
+    # plt.suptitle(
+    #     "Smooth Line Charts of Variables vs Time", fontsize=16, fontweight="bold"
+    # )
+    # plt.show()

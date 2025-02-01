@@ -49,13 +49,13 @@ class MPCController:
 
     def new_state(self, current_state: ca.DM, u: ca.MX, dt: float):
         # In this version Euler
-        new_state = current_state + self.dot_s(current_state, u, dt) * dt
+        # new_state = current_state + self.dot_s(current_state, u, dt) * dt
         # RK4
-        # k1 = self.dot_s(current_state, u, dt)
-        # k2 = self.dot_s(current_state + 0.5 * dt * k1, u, dt)
-        # k3 = self.dot_s(current_state + 0.5 * dt * k2, u, dt)
-        # k4 = self.dot_s(current_state + dt * k3, u, dt)
-        # new_state = current_state + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
+        k1 = self.dot_s(current_state, u, dt)
+        k2 = self.dot_s(current_state + 0.5 * dt * k1, u, dt)
+        k3 = self.dot_s(current_state + 0.5 * dt * k2, u, dt)
+        k4 = self.dot_s(current_state + dt * k3, u, dt)
+        new_state = current_state + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
         return new_state
 
     ########################################################
@@ -86,7 +86,7 @@ class MPCController:
         R = ca.DM(
             [
                 [0.85, 0],
-                [0, 1e2],
+                [0, 1e3],
             ]
         )
 
