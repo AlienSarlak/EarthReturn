@@ -32,9 +32,9 @@ class MPCController:
         ddot_alpha = (r / self.I) * F_t * ca.sin(alpha + theta)
         ###################################
 
-        dot_x = current_state[3] + ddot_x * dt
-        dot_y = current_state[4] + ddot_y * dt
-        dot_alpha = current_state[5] + ddot_alpha * dt
+        dot_x = current_state[3]
+        dot_y = current_state[4]
+        dot_alpha = current_state[5]
 
         dot_s = ca.vertcat(
             dot_x,
