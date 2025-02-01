@@ -24,7 +24,7 @@ def main():
     #    abs(alpha) must be <=50
     #  300 <  x  < 500
     #
-    initial_state = State_Vector(x=200, y=rocket_y, alpha=radians(+50))
+    initial_state = State_Vector(x=600, y=rocket_y, alpha=radians(-70))
     print(initial_state)
 
     rocket = Rocket(
@@ -97,6 +97,7 @@ def main():
 
         # thrust = -300
         # nozzle_angle = radians(-1)
+        current_time = time.time()
 
         print(
             f"Thrust => {'{:.2f}'.format(-thrust)}, \
@@ -105,8 +106,9 @@ def main():
 
         print(f"vector: {ps.rocket.state_vector}")
         print(
-            f"Distance to the ground: {'{:.2f}'.format(y_target - ps.rocket.state_vector.y)}, \
-          Velocity: {'{:.2f}'.format(ps.rocket.state_vector.y_dot)}"
+            f"Distance to the ground: {y_target - ps.rocket.state_vector.y:.2f}, "
+            f"Velocity: {ps.rocket.state_vector.y_dot:.2f}, "
+            f"Time: {(current_time - start_time):.2f}"
         )
 
         print("\n")
@@ -129,8 +131,8 @@ def main():
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        # running = True if (current_time - start_time) < 10 else False
-        running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
+        running = True if (current_time - start_time) < 30 else False
+        # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
 
