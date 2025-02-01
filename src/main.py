@@ -24,7 +24,7 @@ def main():
     #    abs(alpha) must be <=50
     #  300 <  x  < 500
     #
-    initial_state = State_Vector(x=600, y=rocket_y, alpha=radians(-70))
+    initial_state = State_Vector(x=100, y=rocket_y, alpha=radians(-60))
     print(initial_state)
 
     rocket = Rocket(
@@ -99,21 +99,21 @@ def main():
         # nozzle_angle = radians(-1)
         current_time = time.time()
 
-        print(
-            f"Thrust => {'{:.2f}'.format(-thrust)}, \
-              Nozzle Angle => {'{:.2f}'.format(degrees(nozzle_angle))}"
-        )
+        # print(
+        #     f"Thrust => {'{:.2f}'.format(-thrust)}, \
+        #       Nozzle Angle => {'{:.2f}'.format(degrees(nozzle_angle))}"
+        # )
 
-        print(f"vector: {ps.rocket.state_vector}")
-        print(
-            f"Distance to the ground: {y_target - ps.rocket.state_vector.y:.2f}, "
-            f"Velocity: {ps.rocket.state_vector.y_dot:.2f}, "
-            f"Time: {(current_time - start_time):.2f}"
-        )
+        # print(f"vector: {ps.rocket.state_vector}")
+        # print(
+        #     f"Distance to the ground: {y_target - ps.rocket.state_vector.y:.2f}, "
+        #     f"Velocity: {ps.rocket.state_vector.y_dot:.2f}, "
+        #     f"Time: {(current_time - start_time):.2f}"
+        # )
 
         print("\n")
 
-        current_time = time.time()
+        # if(current_time - start_time > 200):
         time_stamp.append(current_time - start_time)
         alpha_list.append(degrees(ps.rocket.state_vector.alpha))
         nozzle_list.append(degrees(nozzle_angle))
@@ -127,11 +127,14 @@ def main():
         p_doty_list.append(predicted_state[4])
         p_x_list.append(predicted_state[0])
         p_dotalpha_list.append(degrees(predicted_state[5]))
+        # if(current_time - start_time>235):
+        #     break
 
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        running = True if (current_time - start_time) < 30 else False
+        running = True if (current_time - start_time) < 35 else False
+
         # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 
     print("End ...")
@@ -159,15 +162,18 @@ def main():
     plt.style.use("seaborn-v0_8-deep")
 
     # Create subplots
-    fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(10, 8), constrained_layout=True)
+    # fig, axes = plt.subplots(nrows=6, ncols=1, figsize=(10, 8), constrained_layout=True)
 
     # Flatten axes for easy iteration (since it's a grid)
-    axes = axes.flatten()
+    # axes = axes.flatten()
 
     # Define colors for the two sets of data
     colors = ["blue", "red"]  # Original data in blue, p_ data in red
 
-    for i, (ax, (data, p_data), title) in enumerate(zip(axes, data_lists, titles)):
+    for i, ((data, p_data), title) in enumerate(zip(data_lists, titles)):
+
+        fig, ax = plt.subplots(figsize=(10, 8))
+
         ax.plot(time_stamp, data, label=f"{title} (Original)", linewidth=2, color=colors[0])
 
         if p_data is not None:
@@ -183,11 +189,16 @@ def main():
 
         ax.legend()
 
+        filename = f"{i}.png"
+        plt.savefig(filename, dpi=600, bbox_inches="tight")
+
+        plt.close(fig)
+
     # Display the plot
-    plt.suptitle(
-        "Smooth Line Charts of Variables vs Time", fontsize=16, fontweight="bold"
-    )
-    plt.show()
+    # plt.suptitle(
+    #     "Smooth Line Charts of Variables vs Time", fontsize=16, fontweight="bold"
+    # )
+    # plt.show()
 
 
     # # DRAW PLOTS
@@ -245,12 +256,6 @@ def main():
     # plt.show()
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
     main()
 
@@ -259,7 +264,6 @@ if __name__ == "__main__":
     #     fig, ax = plt.subplots(figsize=(10, 4))  # Create a new figure for each plot
 
     #     ax.plot(time_stamp, data, label=title, linewidth=2, color="blue")
-
     #     ax.set_title(title, fontsize=12, fontweight="bold")
     #     ax.set_xlabel("Time (s)", fontsize=10)
     #     ax.set_ylabel("Value", fontsize=10)

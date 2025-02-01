@@ -88,7 +88,7 @@ class MPCController:
         R = ca.DM(
             [
                 [0.85, 0],
-                [0, 1],
+                [0, 1e3],
             ]
         )
 
@@ -120,8 +120,8 @@ class MPCController:
 
         R_F = ca.DM(
             [
-                [5, 0],
-                [0, 10],
+                [1, 0],
+                [0, 2e3],
             ]
         )
 
@@ -158,15 +158,15 @@ class MPCController:
 
     def solve(self, U):
         p_opts = {
-            "print_time": False,  # Disable printing of timing information
+            "print_time": True,  # Disable printing of timing information
             "ipopt": {
-                "print_level": 0,  # Set print level to 0 (no output)
-                "sb": "yes",  # Suppress IPOPT banner
+                "print_level": 1,  # Set print level to 0 (no output)
+                "sb": "no",  # Suppress IPOPT banner
                 "file_print_level": 0,  # No output in log files
             },
             "expand": True,
         }
-        s_opts = {"max_iter": 150, "print_level": 0, "sb": "yes"}
+        s_opts = {"max_iter": 150, "print_level": 1, "sb": "no"}
         self.opti.solver("ipopt", p_opts, s_opts)
 
         solution = self.opti.solve()
