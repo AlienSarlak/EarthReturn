@@ -4,7 +4,7 @@ from rocket import Rocket
 from elements import Elements
 from math import degrees
 from exhaust_flame import ExhaustFlame
-from math import pi
+from math import exp
 from utils import rotate_point
 
 
@@ -43,7 +43,7 @@ class Physics_Simulator(Elements):
                                           position=(0, 0),
                                           thrust_force=1,
                                           angle=0.0,
-                                          number_of_particles=250)
+                                          number_of_particles=500)
 
     @property
     def rocket(self):
@@ -69,6 +69,11 @@ class Physics_Simulator(Elements):
         rect = rotated_image.get_rect(
             center=(self._rocket.body.position.x, self._rocket.body.position.y))
         screen.blit(rotated_image, rect.topleft)
+
+
+        # \frac{1}{1+e^{-4\left(x\cdot2-1\right)}}
+        x = abs(self.rocket.current_thrust) / 600.0
+        self.exhaust_flame.number_of_particles = int(1/(1+exp(-4*(2*x-1))) * 700)
 
         # Exhuast flame
         self.exhaust_flame.position = rotate_point(x=rect.centerx,

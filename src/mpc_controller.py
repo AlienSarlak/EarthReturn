@@ -158,15 +158,15 @@ class MPCController:
 
     def solve(self, U):
         p_opts = {
-            "print_time": True,  # Disable printing of timing information
+            "print_time": False,  # Disable printing of timing information
             "ipopt": {
-                "print_level": 1,  # Set print level to 0 (no output)
-                "sb": "no",  # Suppress IPOPT banner
+                "print_level": 0,  # Set print level to 0 (no output)
+                "sb": "yes",  # Suppress IPOPT banner
                 "file_print_level": 0,  # No output in log files
             },
             "expand": True,
         }
-        s_opts = {"max_iter": 150, "print_level": 1, "sb": "no"}
+        s_opts = {"max_iter": 50, "print_level": 0, "sb": "yes"}
         self.opti.solver("ipopt", p_opts, s_opts)
 
         solution = self.opti.solve()

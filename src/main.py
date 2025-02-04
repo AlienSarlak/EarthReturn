@@ -17,14 +17,14 @@ def main():
     mass = 30  # KG
 
     visualizer = Visualize(width=800, height=1000, fps=fps)
-    rocket_y = 100  # in pixels
+    rocket_y = 200  # in pixels
     # initial SS vector
     #
     #   Do not set alpha > ±50
     #    abs(alpha) must be <=50
     #  300 <  x  < 500
     #
-    initial_state = State_Vector(x=300, y=rocket_y, alpha=radians(-70))
+    initial_state = State_Vector(x=250, y=rocket_y, alpha=radians(-70))
     print(initial_state)
 
     rocket = Rocket(
@@ -99,17 +99,17 @@ def main():
         # nozzle_angle = radians(-1)
         current_time = time.time()
 
-        # print(
-        #     f"Thrust => {'{:.2f}'.format(-thrust)}, \
-        #       Nozzle Angle => {'{:.2f}'.format(degrees(nozzle_angle))}"
-        # )
+        print(
+            f"Thrust => {'{:.2f}'.format(-thrust)}, \
+              Nozzle Angle => {'{:.2f}'.format(degrees(nozzle_angle))}"
+        )
 
-        # print(f"vector: {ps.rocket.state_vector}")
-        # print(
-        #     f"Distance to the ground: {y_target - ps.rocket.state_vector.y:.2f}, "
-        #     f"Velocity: {ps.rocket.state_vector.y_dot:.2f}, "
-        #     f"Time: {(current_time - start_time):.2f}"
-        # )
+        print(f"vector: {ps.rocket.state_vector}")
+        print(
+            f"Distance to the ground: {y_target - ps.rocket.state_vector.y:.2f}, "
+            f"Velocity: {ps.rocket.state_vector.y_dot:.2f}, "
+            f"Time: {(current_time - start_time):.2f}"
+        )
 
         print("\n")
 
