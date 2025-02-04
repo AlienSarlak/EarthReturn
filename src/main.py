@@ -24,7 +24,7 @@ def main():
     #    abs(alpha) must be <=50
     #  300 <  x  < 500
     #
-    initial_state = State_Vector(x=100, y=rocket_y, alpha=radians(-60))
+    initial_state = State_Vector(x=300, y=rocket_y, alpha=radians(-70))
     print(initial_state)
 
     rocket = Rocket(
