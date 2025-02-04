@@ -17,7 +17,7 @@ def main():
     mass = 30  # KG
 
     visualizer = Visualize(width=800, height=1000, fps=fps)
-    rocket_y = 200  # in pixels
+    rocket_y = 500  # in pixels
     # initial SS vector
     #
     #   Do not set alpha > ±50
@@ -133,7 +133,7 @@ def main():
         visualizer.update()
         # running = False
         # time.sleep(0.5)
-        running = True if (current_time - start_time) < 35 else False
+        # running = True if (current_time - start_time) < 35 else False
 
         # running = False if (y_target - ps.rocket.state_vector.y) < 2 else True
 

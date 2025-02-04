@@ -14,7 +14,7 @@ class Particle:
         self.initial_lifetime = self.lifetime
 
         self.radius = 3
-
+        self.dust = False
         # Define colors for transition
         self.start_color = (255, 0, 0)  # Red
         self.middle_color = (255, 255, 0)  # Yellow
@@ -55,15 +55,14 @@ class Particle:
             self.velocity[1] = -self.velocity[1] * bounce_factor
             self.velocity[0] += random.uniform(-2, 2)
             self.position[1] = self.ground_level - self.radius
-            self.lifetime -= 10
+            # self.lifetime -= 2
+            self.dust = True
 
-        else:
-            # Decrease lifetime
-            self.lifetime -= 2
+        self.lifetime -= 1
 
         # Ensure particles are not on the body of the rocket
         if (src_position[1] - self.position[1]) > 0:
-            self.lifetime -= 10
+            self.lifetime -= 3
 
         # Shrink particle as it ages
         self.radius = max(1, self.radius - 0.1)
@@ -72,10 +71,26 @@ class Particle:
         return self.lifetime > 0
 
     def draw(self, screen):
-        current_color = self.interpolate_color()
+
+        current_color = (
+            int(135),
+            int(35),
+            int(0),
+        )
+
+        r = self.radius
+
+        if self.dust:
+            self.radius+=0.1
+
+        if not self.dust:
+            current_color = self.interpolate_color()
+
+
+
 
         pygame.draw.circle(screen, current_color, (int(
-            self.position[0]), int(self.position[1])), int(self.radius))
+            self.position[0]), int(self.position[1])), int(r))
 
 
 class ExhaustFlame:
