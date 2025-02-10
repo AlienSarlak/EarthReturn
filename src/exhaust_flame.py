@@ -82,6 +82,7 @@ class Particle:
 
         if self.dust:
             self.radius+=0.1
+            r = self.radius
 
         if not self.dust:
             current_color = self.interpolate_color()
