@@ -3,7 +3,7 @@
 
 ## Project Overview
 
-Welcome to **EarthReturn**, a project designed to simulate the landing of a rocket in a 2D environment. This project is part of a series that gradually increases in complexity, eventually leading to a full 3D rocket landing simulation. 
+Welcome to **EarthReturn**, a project designed to simulate the landing of a rocket in a 2D environment. This project is part of a series that gradually increases in complexity, eventually leading to a full 3D rocket landing simulation.
 
 This branch focuses on the simplest 2D case where the rocket can move vertically under the influence of gravity and controlled thrust.
 
@@ -12,6 +12,9 @@ This branch focuses on the simplest 2D case where the rocket can move vertically
 - **2D Rocket Dynamics**: Simulates vertical motion with gravity and thrust.
 - **Basic Control**: Implements a simple Model Predictive Control (MPC) algorithm to guide the rocket to a safe landing.
 - **Simulation Environment**: A basic physics simulation that models the rocket's vertical position and velocity.
+
+## Document
+Please have a look at the [documentation](docs/document.pdf) for more information, including the theory behind the project.
 
 ## Project Structure
 
@@ -26,4 +29,3 @@ This branch focuses on the simplest 2D case where the rocket can move vertically
 │   └── utils.py                # Utility functions (e.g., plotting, logging)
 └── data/
 └── Dockerfile                  # Docker file
-
